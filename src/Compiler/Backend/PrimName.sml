@@ -154,7 +154,9 @@ datatype prim =
          Int_to_f64 |
 
          Blockf64_update_real | Blockf64_sub_real | Blockf64_size | Blockf64_alloc |
-         Blockf64_update_f64 | Blockf64_sub_f64
+         Blockf64_update_f64 | Blockf64_sub_f64 |
+
+         M256d_add | M256d_broadcast
 
 local
   structure M = OrderFinMap(struct type T = string
@@ -325,7 +327,9 @@ local
          ("__blockf64_size", Blockf64_size),
          ("__blockf64_alloc", Blockf64_alloc),
          ("__blockf64_update_f64", Blockf64_update_f64),
-         ("__blockf64_sub_f64", Blockf64_sub_f64)
+         ("__blockf64_sub_f64", Blockf64_sub_f64),
+         ("__m256d_add", M256d_add),
+         ("__m256d_broadcast", M256d_broadcast)
 ]
 
   val M = M.fromList pairs
@@ -700,6 +704,8 @@ fun pp_prim (p:prim) : string =
       | Blockf64_alloc => "Blockf64_alloc"
       | Blockf64_update_f64 => "Blockf64_update_f64"
       | Blockf64_sub_f64 => "Blockf64_sub_f64"
+      | M256d_add => "M256d_add"
+      | M256d_broadcast => "M256d_broadcast"
 
 end
 

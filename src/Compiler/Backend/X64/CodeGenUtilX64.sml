@@ -2712,5 +2712,17 @@ struct
               end
          end
 
+      fun m256d_broadcast (x,d,size_ff,C) =
+         let val x_C = load_real(x, tmp_reg0, size_ff,tmp_freg0)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in x_C(I.vbroadcastsd(R tmp_freg0, R d) :: C')
+         end
+
+      fun m256d_add (x,y,d,size_ff,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in x_C(y_C(I.vaddpd(R x, R y, R d) :: C'))
+         end
 
 end

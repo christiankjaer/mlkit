@@ -15,6 +15,10 @@ signature INSTS_X64 =
                  | xmm4 | xmm5 | xmm6 | xmm7
                  | xmm8 | xmm9 | xmm10 | xmm11
                  | xmm12 | xmm13 | xmm14 | xmm15
+                 | ymm0 | ymm1 | ymm2 | ymm3
+                 | ymm4 | ymm5 | ymm6 | ymm7
+                 | ymm8 | ymm9 | ymm10 | ymm11
+                 | ymm12 | ymm13 | ymm14 | ymm15
 
     val pr_reg : reg -> string
     val is_xmm : reg -> bool
@@ -106,6 +110,12 @@ signature INSTS_X64 =
     | xorps of ea * ea
     | sqrtsd of ea * ea
     | cvtsi2sdq of ea * ea
+
+    | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
+    | vmulpd of ea * ea * ea
+    | vsubpd of ea * ea * ea
+    | vblendvpd of ea * ea * ea * ea
+    | vbroadcastsd of ea * ea
 
     | fstpq of ea       (* store float and pop float stack *)
     | fldq of ea        (* push float onto the float stack *)

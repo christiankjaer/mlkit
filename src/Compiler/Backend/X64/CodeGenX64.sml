@@ -934,6 +934,8 @@ struct
                             | Int_to_f64     => int_to_f64 arg
                             | Blockf64_size  => blockf64_size arg
 
+                            | M256d_broadcast => m256d_broadcast (x,d,size_ff,C)
+
                             | Is_null => cmpi_kill_tmp01 {box=false,quad=false} I.je
                                                          (x, SS.INTEGER_ATY{value=IntInf.fromInt 0,
                                                                             precision=32},d,size_ff,C)
@@ -1121,6 +1123,7 @@ struct
                             | F64_to_real => f64_to_real_kill_tmp01 arg
                             | Blockf64_alloc => blockf64_alloc arg
                             | Blockf64_sub_f64 => blockf64_sub_f64 arg
+                            | M256d_add => m256d_add (x,y,d,size_ff,C)
                             | _ => die ("unsupported prim with 2 args: " ^ PrimName.pp_prim name)
                        end
                      | [b,x,y] =>

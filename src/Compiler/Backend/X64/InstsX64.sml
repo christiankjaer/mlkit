@@ -33,6 +33,10 @@ structure InstsX64: INSTS_X64 =
                  | xmm4 | xmm5 | xmm6 | xmm7
                  | xmm8 | xmm9 | xmm10 | xmm11
                  | xmm12 | xmm13 | xmm14 | xmm15
+                 | ymm0 | ymm1 | ymm2 | ymm3
+                 | ymm4 | ymm5 | ymm6 | ymm7
+                 | ymm8 | ymm9 | ymm10 | ymm11
+                 | ymm12 | ymm13 | ymm14 | ymm15
 
     type freg = int
 
@@ -124,6 +128,12 @@ structure InstsX64: INSTS_X64 =
     | xorps of ea * ea
     | sqrtsd of ea * ea
     | cvtsi2sdq of ea * ea
+
+    | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
+    | vmulpd of ea * ea * ea
+    | vsubpd of ea * ea * ea
+    | vblendvpd of ea * ea * ea * ea
+    | vbroadcastsd of ea * ea
 
     | fstpq of ea       (* store float and pop float stack *)
     | fldq of ea        (* push float onto the float stack *)
@@ -233,6 +243,22 @@ structure InstsX64: INSTS_X64 =
       | pr_reg xmm13 = "%xmm13"
       | pr_reg xmm14 = "%xmm14"
       | pr_reg xmm15 = "%xmm15"
+      | pr_reg ymm0 = "%ymm0"
+      | pr_reg ymm1 = "%ymm1"
+      | pr_reg ymm2 = "%ymm2"
+      | pr_reg ymm3 = "%ymm3"
+      | pr_reg ymm4 = "%ymm4"
+      | pr_reg ymm5 = "%ymm5"
+      | pr_reg ymm6 = "%ymm6"
+      | pr_reg ymm7 = "%ymm7"
+      | pr_reg ymm8 = "%ymm8"
+      | pr_reg ymm9 = "%ymm9"
+      | pr_reg ymm10 = "%ymm10"
+      | pr_reg ymm11 = "%ymm11"
+      | pr_reg ymm12 = "%ymm12"
+      | pr_reg ymm13 = "%ymm13"
+      | pr_reg ymm14 = "%ymm14"
+      | pr_reg ymm15 = "%ymm15"
 
     fun is_xmm (r:reg) =
         case r of
@@ -253,6 +279,29 @@ structure InstsX64: INSTS_X64 =
           | xmm14 => true
           | xmm15 => true
           | _ => false
+
+    fun to_ymm (x: ea) =
+      case x of
+           R r => R (case r of
+                        xmm0 => ymm0
+                      | xmm1 => ymm1
+                      | xmm2 => ymm2
+                      | xmm3 => ymm3
+                      | xmm4 => ymm4
+                      | xmm5 => ymm5
+                      | xmm6 => ymm6
+                      | xmm7 => ymm7
+                      | xmm8 => ymm8
+                      | xmm9 => ymm9
+                      | xmm10 => ymm10
+                      | xmm11 => ymm11
+                      | xmm12 => ymm12
+                      | xmm13 => ymm13
+                      | xmm14 => ymm14
+                      | xmm15 => ymm15
+                      | _ => r)
+        | _ => x
+
 
     fun remove_ctrl s =
         String.implode (List.filter (fn c =>
@@ -303,6 +352,15 @@ structure InstsX64: INSTS_X64 =
           fun emit_bin (s, (ea1, ea2)) = (emit "\t"; emit s; emit " ";
                                           emit(pr_ea ea1); emit ",";
                                           emit(pr_ea ea2); emit_nl())
+          fun emit_ter (s, (ea1, ea2, ea3)) = (emit "\t"; emit s; emit " ";
+                                              emit(pr_ea ea1); emit ",";
+                                              emit(pr_ea ea2); emit ",";
+                                              emit(pr_ea ea3); emit_nl())
+          fun emit_quad (s, (ea1, ea2, ea3, ea4)) = (emit "\t"; emit s; emit " ";
+                                                    emit(pr_ea ea1); emit ",";
+                                                    emit(pr_ea ea2); emit ",";
+                                                    emit(pr_ea ea3); emit ",";
+                                                    emit(pr_ea ea4); emit_nl())
           fun emit_unary (s, ea) = (emit "\t"; emit s; emit " "; emit(pr_ea ea); emit_nl())
           fun emit_nullary s = (emit "\t"; emit s; emit_nl())
           fun emit_nullary0 s = (emit s; emit_nl())
@@ -365,6 +423,12 @@ structure InstsX64: INSTS_X64 =
                | xorps a => emit_bin("xorps", a)
                | sqrtsd a => emit_bin("sqrtsd", a)
                | cvtsi2sdq a => emit_bin("cvtsi2sdq", a)
+
+               | vbroadcastsd (a1, a2) => emit_bin("vbroadcastsd", (a1, to_ymm a2))
+               | vaddpd (a1, a2, a3) => emit_ter("vaddpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vmulpd (a1, a2, a3) => emit_ter("vmulpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vsubpd (a1, a2, a3) => emit_ter("vsubpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vblendvpd (a1, a2, a3, a4) => emit_quad("vblendvpd", (to_ymm a1, to_ymm a2, to_ymm a3, to_ymm a4))
 
                | fstpq ea => emit_unary("fstpq", ea)
                | fldq ea => emit_unary("fldq", ea)
@@ -623,6 +687,11 @@ structure InstsX64: INSTS_X64 =
              | xorps (ea1,ea2) => xorps (Em ea1,Em ea2)
              | sqrtsd (ea1,ea2) => sqrtsd (Em ea1,Em ea2)
              | cvtsi2sdq (ea1,ea2) => cvtsi2sdq (Em ea1,Em ea2)
+             | vaddpd (ea1, ea2, ea3) => vaddpd (Em ea1, Em ea2, Em ea3)
+             | vmulpd (ea1, ea2, ea3) => vmulpd (Em ea1, Em ea2, Em ea3)
+             | vsubpd (ea1, ea2, ea3) => vsubpd (Em ea1, Em ea2, Em ea3)
+             | vblendvpd (ea1, ea2, ea3, ea4) => vblendvpd (Em ea1, Em ea2, Em ea3, Em ea4)
+             | vbroadcastsd (ea1, ea2) => vbroadcastsd (Em ea1, Em ea2)
              | fstpq ea => fstpq (Em ea)
              | fldq ea => fldq (Em ea)
              | jmp ea => jmp (Em ea)
