@@ -70,6 +70,7 @@ structure LambdaExp: LAMBDA_EXP =
     val exnType = CONStype([], TyName.tyName_EXN)
     val realType = CONStype([], TyName.tyName_REAL)
     val f64Type = CONStype([], TyName.tyName_F64)
+    val f256Type = CONStype([], TyName.tyName_F256)
     val stringType = CONStype([], TyName.tyName_STRING)
     val chararrayType = CONStype([], TyName.tyName_CHARARRAY)
     val unitType = RECORDtype([])
@@ -122,6 +123,7 @@ structure LambdaExp: LAMBDA_EXP =
       | STRING   of string * regvar option
       | REAL     of string * regvar option
       | F64      of string
+      | F256     of string
       | FN       of {pat : (lvar * Type) list, body : LambdaExp}
       | LET      of {pat : (lvar * tyvar list * Type) list,
 		     bind : LambdaExp,
@@ -175,6 +177,7 @@ structure LambdaExp: LAMBDA_EXP =
         | STRING _ => new_acc
         | REAL _ => new_acc
         | F64 _ => new_acc
+        | F256 _ => new_acc
 	| FN{pat,body} => foldTD fcns (foldl' (foldType g) new_acc (map #2 pat)) body
 	| LET{pat,bind,scope} => foldTD fcns (foldTD fcns (foldl' (foldType g) new_acc (map #3 pat)) bind) scope
         | LETREGION {regvars, scope} => foldTD fcns new_acc scope
@@ -324,6 +327,7 @@ structure LambdaExp: LAMBDA_EXP =
 	  | STRING _	                => ()
 	  | REAL _	                => ()
 	  | F64 _	                => ()
+	  | F256 _	                => ()
 	  | FN _	                => ()
 	  | LET {bind,scope,...}        => (safe bind; safe scope)
           | LETREGION _                 => raise NotSafe            (* memo: maybe safe? *)
@@ -852,6 +856,7 @@ structure LambdaExp: LAMBDA_EXP =
       | REAL (r,NONE) => PP.LEAF(r)
       | REAL (r,SOME rv) => PP.LEAF(r ^ "`" ^ RegVar.pr rv)
       | F64 r => PP.LEAF(r ^ "f64")
+      | F256 r => PP.LEAF(r ^ "f256")
       | FN {pat,body} =>
 	  PP.NODE{start="(fn ",finish=")", indent=4,
 		  children=[layoutFnPat pat,
@@ -1543,6 +1548,7 @@ structure LambdaExp: LAMBDA_EXP =
 	      | toInt (FRAME _) = 18
               | toInt (LETREGION _) = 19
 	      | toInt (F64 _) = 20
+	      | toInt (F256 _) = 21
 
 	    fun fun_VAR pu_LambdaExp =
 		Pickle.con1 VAR (fn VAR a => a | _ => die "pu_LambdaExp.VAR")
@@ -1623,6 +1629,9 @@ structure LambdaExp: LAMBDA_EXP =
 	    fun fun_F64 pu_LambdaExp =
 		Pickle.con1 F64 (fn F64 a => a | _ => die "pu_LambdaExp.F64")
 		Pickle.string
+	    fun fun_F256 pu_LambdaExp =
+		Pickle.con1 F256 (fn F256 a => a | _ => die "pu_LambdaExp.F256")
+		Pickle.string
 
 	in Pickle.dataGen("LambdaExp.LambdaExp",toInt,[fun_VAR,
 						       fun_INTEGER,
@@ -1644,7 +1653,7 @@ structure LambdaExp: LAMBDA_EXP =
 						       fun_PRIM,
 						       fun_FRAME,
                                                        fun_LETREGION,
-                                                       fun_F64])
+                                                       fun_F64, fun_F256])
 	end
 
     structure TyvarSet = NatSet
@@ -1685,6 +1694,7 @@ structure LambdaExp: LAMBDA_EXP =
         | STRING _ => acc
         | REAL _ => acc
         | F64 _ => acc
+        | F256 _ => acc
 	| FN{pat,body} => tyvars_Exp s body (foldl (fn ((_,t),acc) => tyvars_Type s t acc) acc pat)
 	| LET{pat,bind,scope} =>
           let val s' = foldl (fn ((_,tvs,_),s) => TVS.addList tvs s) s pat

@@ -237,6 +237,22 @@ structure OptLambda: OPT_LAMBDA =
       val f64_greatereq = f64_cmp "greatereq"
     end
 
+    (* Operations on unboxed vectors *)
+
+    local
+      type exp = LambdaExp
+      fun ccall name argtypes restype =
+          CCALLprim {name=name,instances=[],tyvars=[],
+		     Type=ARROWtype(argtypes,[restype])}
+      fun f256_bin opr (x:exp,y:exp) : exp =
+          PRIM(ccall ("__" ^ opr ^ "_f256") [f256Type,f256Type] f256Type, [x,y])
+    in
+      fun f256_box (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type] stringType, [x])
+      fun f256_unbox (x:exp) : exp = PRIM(ccall "__f256_unbox" [stringType] f256Type, [x])
+
+      val f256_plus = f256_bin "plus"
+    end
+
    (* -----------------------------------------------------------------
     * Statistical functions
     * ----------------------------------------------------------------- *)
@@ -616,6 +632,7 @@ structure OptLambda: OPT_LAMBDA =
              case e of
                  REAL _ => true
                | F64 _ => true
+               | F256 _ => true
                | WORD _ => true
                | INTEGER _ => true
                | VAR{lvar,...} => if Lvars.eq(lvar,lv) then raise Bad else true
@@ -642,6 +659,7 @@ structure OptLambda: OPT_LAMBDA =
              case e of
                  REAL _ => e
                | F64 _ => e
+               | F256 _ => e
                | WORD _ => e
                | INTEGER _ => e
                | VAR _ => e
@@ -725,6 +743,7 @@ structure OptLambda: OPT_LAMBDA =
            VAR{instances=[],regvars=[],...} => true
          | INTEGER (_,t) => if tag_values() then eq_Type(t,int31Type) orelse eq_Type(t,int63Type) else true
          | F64 _ => true
+         | F256 _ => true
          | LET{pat,bind,scope} => simple_nonexpanding bind andalso simple_nonexpanding scope
          | PRIM(SELECTprim _, [e]) => simple_nonexpanding e
          | PRIM(CCALLprim{name,...},[e]) =>
@@ -1025,6 +1044,7 @@ structure OptLambda: OPT_LAMBDA =
                     | WORD _ => NONE
                     | REAL _ => NONE
                     | F64 _ => NONE
+                    | F256 _ => NONE
                     | STRING _ => NONE
                     | FN _ => NONE
                     | HANDLE _ => NONE
@@ -1441,6 +1461,7 @@ structure OptLambda: OPT_LAMBDA =
 	   | STRING _ => (lamb, CCONST lamb)
 	   | REAL _ => (lamb, CCONST lamb)
 	   | F64 _ => (lamb, CCONST lamb)
+	   | F256 _ => (lamb, CCONST lamb)
 	   | LET{pat=[(lvar,tyvars,tau)],bind,scope} =>
 	       let
                  (* maybe let-float f64-binding outwards to open up for other optimisations *)
@@ -1669,6 +1690,18 @@ structure OptLambda: OPT_LAMBDA =
                       else default()
                    end
                  | _ => default()
+            end
+          | PRIM(CCALLprim{name="__f256_unbox",...},[e]) =>
+            let fun loop e f =
+                    case e of
+                        PRIM(CCALLprim{name="__f256_box",...},[e]) =>
+                        (tick "f256 unbox o box elimination - let";
+                         SOME (f e))
+                      | LET{pat,bind,scope} => loop scope (f o (fn e => LET{pat=pat,bind=bind,scope=e}))
+                      | _ => NONE
+            in case loop e (fn x => x) of
+                   NONE => constantFolding env lamb fail
+                 | SOME e' => reduce(env,(e',CUNKNOWN))
             end
           | PRIM(CCALLprim{name="ord",...}, [WORD (i,t)]) =>
             (tick "ord immed"; (INTEGER(i,intDefaultType()), CUNKNOWN))
