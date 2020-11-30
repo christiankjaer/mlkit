@@ -740,6 +740,7 @@ structure LambdaStatSem: LAMBDA_STAT_SEM =
 	 | STRING s => Types [CONStype([], tyName_STRING)]
 	 | REAL s => Types [CONStype([], tyName_REAL)]
 	 | F64 s => Types [CONStype([], tyName_F64)]
+	 | F256 s => Types [CONStype([], tyName_F256)]
 	 | FN {pat,body} =>
 	  let val env' = foldl (fn ((lvar,Type), env) =>
 				     add_lvar(lvar,([],Type),env)) env pat
