@@ -2099,22 +2099,6 @@ struct
          C')
        end
 
-     (* boxed operations on vectors *)
-     fun bin_vector_op_kill_tmp01 v_inst (b,x,y,d,size_ff,C) =
-       let val x_C = load_vector(x, tmp_reg0, size_ff, tmp_freg1)
-           val y_C = load_vector(y, tmp_reg0, size_ff, tmp_freg0)
-           val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
-           val (d_reg, C') = resolve_aty_def(d, tmp_reg0, size_ff, C)
-       in
-         y_C(x_C(v_inst(R tmp_freg0, R tmp_freg1, R tmp_freg1) ::
-         b_C(store_vector(b_reg,tmp_reg1,tmp_freg1,
-         copy(b_reg,d_reg, C')))))
-       end
-
-     fun vadd_kill_tmp01 a = bin_vector_op_kill_tmp01 I.vaddpd a
-
-     (* end boxed operations on vectors *)
-
      fun bin_op_kill_tmp01 {quad} inst (x,y,d,size_ff,C) =
        let val (x_reg,x_C) = resolve_arg_aty(x,tmp_reg0,size_ff)
            val (y_reg,y_C) = resolve_arg_aty(y,tmp_reg1,size_ff)
@@ -2805,24 +2789,6 @@ struct
                  I.movsd(DD("8",t_reg,i_reg,"8"), R d) ::
                  C'))
               end
-         end
-
-      (* return result boxed *)
-      fun m256d_broadcast (b,x,d,size_ff,C) =
-         let val x_C = load_real(x, tmp_reg0, size_ff,tmp_freg0)
-             val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
-             val (d_reg, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
-         in
-           x_C(I.vbroadcastsd(R tmp_freg0, R tmp_freg1) :: 
-           b_C(store_vector(b_reg, tmp_reg1, tmp_freg1, copy(b_reg, d_reg, C'))))
-         end
-
-      (* boxed. unpack and repack *)
-      fun m256d_plus (b,x,y,d,size_ff,C) =
-         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
-             val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
-             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
-         in x_C(y_C(I.vaddpd(R x, R y, R d) :: C'))
          end
 
      fun f256_unbox (x,d,size_ff,C) =

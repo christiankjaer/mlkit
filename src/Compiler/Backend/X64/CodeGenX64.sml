@@ -1146,7 +1146,7 @@ struct
                             | Plus_f256 => plus_f256 arg
                             | Minus_f256 => die "Minus_f256"
                             | Mul_f256 => die "Mul_f256"
-                            | M256d_broadcast => m256d_broadcast arg
+                            | M256d_broadcast => die "M256d_broadcast: boxed broadcast not implemented"
                             | _ => die ("unsupported prim with 2 args: " ^ PrimName.pp_prim name)
                        end
                      | [b,x,y] =>
@@ -1184,7 +1184,7 @@ struct
                           | Blockf64_update_real => blockf64_update_real (b,x,y,d,size_ff,C)
                           | Blockf64_sub_real => blockf64_sub_real (b,x,y,d,size_ff,C)
                           | Blockf64_update_f64 => blockf64_update_f64 (b,x,y,d,size_ff,C)
-                          | M256d_plus => vadd_kill_tmp01 (b,x,y,d,size_ff,C)
+                          | M256d_plus => die "M256d_plus: boxed operation not implemented"
                           | _ => die ("unsupported prim with 3 args: " ^ PrimName.pp_prim name))
                      | _ => die ("PRIM(" ^ PrimName.pp_prim name ^ ") not implemented")))
                  end
