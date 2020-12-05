@@ -534,6 +534,19 @@ struct
       else
         I.movsd (R freg,D("0",base_reg)) :: C
 
+    (* Load vector into register (freg) from string *)
+    fun load_vector (vector_aty, t, size_ff, freg) =
+      fn C => case vector_aty
+                   of SS.PHREG_ATY x => I.vmovupd(D("0", x),R freg) :: C
+                    | _ => move_aty_into_reg(vector_aty,t,size_ff,
+                           I.vmovupd(D("0", t),R freg) :: C)
+
+
+    (* Store vector in string (freg) *)
+
+    fun store_vector (base_reg, t:reg, freg, C) =
+      I.vmovupd (R freg, D("0", base_reg)) :: C
+
     (* When tag free collection of pairs is enabled, a bit is stored
        in the region descriptor if the region is an infinite region
        holding pairs, refs, triples and arrays. Here we arrange that
@@ -1957,6 +1970,25 @@ struct
             copy(b_reg,d_reg, C'))))
          end
 
+     (* unboxed operations on vectors *)
+
+     fun bin_f256_op s v_inst (x,y,d,size_ff:int,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(y_C(v_inst(R x, R y, R d) :: C'))
+         end
+
+     val plus_f256 = bin_f256_op "vaddpd" I.vaddpd
+
+    fun broadcast_f256 (x,d,size_ff:int, C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg1,size_ff, C)
+         in
+           x_C(I.vbroadcastsd(R x, R d) :: C)
+         end
+
 
      (* boxed operations on reals (floats) *)
 
@@ -2019,6 +2051,22 @@ struct
          I.lab cont_lab ::
          C')
        end
+
+     (* boxed operations on vectors *)
+     fun bin_vector_op_kill_tmp01 v_inst (b,x,y,d,size_ff,C) =
+       let val x_C = load_vector(x, tmp_reg0, size_ff, tmp_freg1)
+           val y_C = load_vector(y, tmp_reg0, size_ff, tmp_freg0)
+           val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
+           val (d_reg, C') = resolve_aty_def(d, tmp_reg0, size_ff, C)
+       in
+         y_C(x_C(v_inst(R tmp_freg0, R tmp_freg1, R tmp_freg1) ::
+         b_C(store_vector(b_reg,tmp_reg1,tmp_freg1,
+         copy(b_reg,d_reg, C')))))
+       end
+
+     fun vadd_kill_tmp01 a = bin_vector_op_kill_tmp01 I.vaddpd a
+
+     (* end boxed operations on vectors *)
 
      fun bin_op_kill_tmp01 {quad} inst (x,y,d,size_ff,C) =
        let val (x_reg,x_C) = resolve_arg_aty(x,tmp_reg0,size_ff)
@@ -2712,17 +2760,35 @@ struct
               end
          end
 
-      fun m256d_broadcast (x,d,size_ff,C) =
+      (* return result boxed *)
+      fun m256d_broadcast (b,x,d,size_ff,C) =
          let val x_C = load_real(x, tmp_reg0, size_ff,tmp_freg0)
-             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
-         in x_C(I.vbroadcastsd(R tmp_freg0, R d) :: C')
+             val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
+             val (d_reg, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(I.vbroadcastsd(R tmp_freg0, R tmp_freg1) :: 
+           b_C(store_vector(b_reg, tmp_reg1, tmp_freg1, copy(b_reg, d_reg, C'))))
          end
 
-      fun m256d_add (x,y,d,size_ff,C) =
+      (* boxed. unpack and repack *)
+      fun m256d_plus (b,x,y,d,size_ff,C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
              val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
              val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
          in x_C(y_C(I.vaddpd(R x, R y, R d) :: C'))
+         end
+
+     fun f256_unbox (x,d,size_ff,C) =
+         let val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff,C)
+         in load_vector (x, tmp_reg0, size_ff, d) C'
+         end
+
+     fun f256_box_kill_tmp01 (b,x,d,size_ff,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
+             val (d_reg, C') = resolve_aty_def(d, tmp_reg0, size_ff, C)
+         in x_C(b_C(store_vector(b_reg,tmp_reg1,x,
+            copy(b_reg,d_reg, C'))))
          end
 
 end

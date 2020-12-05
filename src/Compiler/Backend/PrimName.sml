@@ -35,19 +35,19 @@ datatype prim =
 	 Plus_word31 | Plus_word32ub | Plus_word32b |
 	 Plus_int63 | Plus_int64ub | Plus_int64b |
 	 Plus_word63 | Plus_word64ub | Plus_word64b |
-         Plus_real | Plus_f64 |
+         Plus_real | Plus_f64 | Plus_f256 |
 
 	 Minus_int31 | Minus_int32ub | Minus_int32b |
 	 Minus_word31 | Minus_word32ub | Minus_word32b |
 	 Minus_int63 | Minus_int64ub | Minus_int64b |
 	 Minus_word63 | Minus_word64ub | Minus_word64b |
-         Minus_real | Minus_f64 |
+         Minus_real | Minus_f64 | Minus_f256 |
 
 	 Mul_int31 | Mul_int32ub | Mul_int32b |
 	 Mul_word31 | Mul_word32ub | Mul_word32b |
 	 Mul_int63 | Mul_int64ub | Mul_int64b |
 	 Mul_word63 | Mul_word64ub | Mul_word64b |
-         Mul_real | Mul_f64 |
+         Mul_real | Mul_f64 | Mul_f256 |
 
 	 Div_real | Div_f64 |
 
@@ -153,10 +153,14 @@ datatype prim =
          Max_f64 | Min_f64 | Real_to_f64 | F64_to_real | Sqrt_f64 |
          Int_to_f64 |
 
+         Broadcast_f256 |
+
          Blockf64_update_real | Blockf64_sub_real | Blockf64_size | Blockf64_alloc |
          Blockf64_update_f64 | Blockf64_sub_f64 |
 
-         M256d_add | M256d_broadcast
+         F256_box | F256_unbox |
+
+         M256d_plus | M256d_broadcast
 
 local
   structure M = OrderFinMap(struct type T = string
@@ -200,19 +204,19 @@ local
 	 ("__plus_word31", Plus_word31), ("__plus_word32ub", Plus_word32ub), ("__plus_word32b", Plus_word32b),
 	 ("__plus_int63", Plus_int63), ("__plus_int64ub", Plus_int64ub), ("__plus_int64b", Plus_int64b),
 	 ("__plus_word63", Plus_word63), ("__plus_word64ub", Plus_word64ub), ("__plus_word64b", Plus_word64b),
-         ("__plus_real", Plus_real), ("__plus_f64", Plus_f64),
+     ("__plus_real", Plus_real), ("__plus_f64", Plus_f64), ("__plus_f256", Plus_f256),
 
 	 ("__minus_int31", Minus_int31), ("__minus_int32ub", Minus_int32ub), ("__minus_int32b", Minus_int32b),
 	 ("__minus_word31", Minus_word31), ("__minus_word32ub", Minus_word32ub), ("__minus_word32b", Minus_word32b),
 	 ("__minus_int63", Minus_int63), ("__minus_int64ub", Minus_int64ub), ("__minus_int64b", Minus_int64b),
 	 ("__minus_word63", Minus_word63), ("__minus_word64ub", Minus_word64ub), ("__minus_word64b", Minus_word64b),
-         ("__minus_real", Minus_real), ("__minus_f64", Minus_f64),
+     ("__minus_real", Minus_real), ("__minus_f64", Minus_f64), ("__minus_f256", Minus_f256),
 
 	 ("__mul_int31", Mul_int31), ("__mul_int32ub", Mul_int32ub), ("__mul_int32b", Mul_int32b),
 	 ("__mul_word31", Mul_word31), ("__mul_word32ub", Mul_word32ub), ("__mul_word32b", Mul_word32b),
 	 ("__mul_int63", Mul_int63), ("__mul_int64ub", Mul_int64ub), ("__mul_int64b", Mul_int64b),
 	 ("__mul_word63", Mul_word63), ("__mul_word64ub", Mul_word64ub), ("__mul_word64b", Mul_word64b),
-         ("__mul_real", Mul_real), ("__mul_f64", Mul_f64),
+     ("__mul_real", Mul_real), ("__mul_f64", Mul_f64), ("__mul_f256", Mul_f256),
 
 	 ("__div_real", Div_real), ("__div_f64", Div_f64),
 
@@ -328,7 +332,10 @@ local
          ("__blockf64_alloc", Blockf64_alloc),
          ("__blockf64_update_f64", Blockf64_update_f64),
          ("__blockf64_sub_f64", Blockf64_sub_f64),
-         ("__m256d_add", M256d_add),
+         ("__broadcast_f256", Broadcast_f256),
+         ("__f256_box", F256_box),
+         ("__f256_unbox", F256_unbox),
+         ("__m256d_plus", M256d_plus),
          ("__m256d_broadcast", M256d_broadcast)
 ]
 
@@ -505,6 +512,7 @@ fun pp_prim (p:prim) : string =
       | Plus_word64b => "Plus_word64b"
       | Plus_real => "Plus_real"
       | Plus_f64 => "Plus_f64"
+      | Plus_f256 => "Plus_f256"
 
       | Minus_int31 => "Minus_int31"
       | Minus_int32ub => "Minus_int32ub"
@@ -520,6 +528,7 @@ fun pp_prim (p:prim) : string =
       | Minus_word64b => "Minus_word64b"
       | Minus_real => "Minus_real"
       | Minus_f64 => "Minus_f64"
+      | Minus_f256 => "Minus_f256"
 
       | Mul_int31 => "Mul_int31"
       | Mul_int32ub => "Mul_int32ub"
@@ -535,6 +544,7 @@ fun pp_prim (p:prim) : string =
       | Mul_word64b => "Mul_word64b"
       | Mul_real => "Mul_real"
       | Mul_f64 => "Mul_f64"
+      | Mul_f256 => "Mul_f256"
 
       | Div_real => "Div_real"
       | Div_f64 => "Div_f64"
@@ -704,7 +714,12 @@ fun pp_prim (p:prim) : string =
       | Blockf64_alloc => "Blockf64_alloc"
       | Blockf64_update_f64 => "Blockf64_update_f64"
       | Blockf64_sub_f64 => "Blockf64_sub_f64"
-      | M256d_add => "M256d_add"
+
+      | Broadcast_f256 => "Broadcast_f256"
+      | F256_box => "M256_box"
+      | F256_unbox => "M256_unbox"
+
+      | M256d_plus => "M256d_plus"
       | M256d_broadcast => "M256d_broadcast"
 
 end

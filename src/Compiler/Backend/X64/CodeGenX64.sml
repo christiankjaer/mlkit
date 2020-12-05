@@ -933,8 +933,9 @@ struct
                             | Abs_f64        => abs_f64 arg
                             | Int_to_f64     => int_to_f64 arg
                             | Blockf64_size  => blockf64_size arg
+                            | Broadcast_f256 => broadcast_f256 arg
+                            | F256_unbox     => f256_unbox arg
 
-                            | M256d_broadcast => m256d_broadcast (x,d,size_ff,C)
 
                             | Is_null => cmpi_kill_tmp01 {box=false,quad=false} I.je
                                                          (x, SS.INTEGER_ATY{value=IntInf.fromInt 0,
@@ -1123,7 +1124,11 @@ struct
                             | F64_to_real => f64_to_real_kill_tmp01 arg
                             | Blockf64_alloc => blockf64_alloc arg
                             | Blockf64_sub_f64 => blockf64_sub_f64 arg
-                            | M256d_add => m256d_add (x,y,d,size_ff,C)
+                            | F256_box => f256_box_kill_tmp01 arg
+                            | Plus_f256 => plus_f256 arg
+                            | Minus_f256 => die "Minus_f256"
+                            | Mul_f256 => die "Mul_f256"
+                            | M256d_broadcast => m256d_broadcast arg
                             | _ => die ("unsupported prim with 2 args: " ^ PrimName.pp_prim name)
                        end
                      | [b,x,y] =>
@@ -1161,6 +1166,7 @@ struct
                           | Blockf64_update_real => blockf64_update_real (b,x,y,d,size_ff,C)
                           | Blockf64_sub_real => blockf64_sub_real (b,x,y,d,size_ff,C)
                           | Blockf64_update_f64 => blockf64_update_f64 (b,x,y,d,size_ff,C)
+                          | M256d_plus => vadd_kill_tmp01 (b,x,y,d,size_ff,C)
                           | _ => die ("unsupported prim with 3 args: " ^ PrimName.pp_prim name))
                      | _ => die ("PRIM(" ^ PrimName.pp_prim name ^ ") not implemented")))
                  end

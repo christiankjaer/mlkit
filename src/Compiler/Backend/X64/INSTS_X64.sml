@@ -111,6 +111,7 @@ signature INSTS_X64 =
     | sqrtsd of ea * ea
     | cvtsi2sdq of ea * ea
 
+    | vmovupd of ea * ea
     | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
     | vmulpd of ea * ea * ea
     | vsubpd of ea * ea * ea

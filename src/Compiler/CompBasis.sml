@@ -170,7 +170,7 @@ structure CompBasis: COMP_BASIS =
           val (lvars_eq,EqEnv1) = EliminateEq.restrict(EqEnv,{lvars=lvars,tynames=tynames})
           val lvars = lvars_eq @ lvars
           val (OEnv1,cons,tynames) = OptLambda.restrict(OEnv,lvars,cons,tynames)
-          val tynames = TyName.tyName_F64 :: tynames (* for optimiser float unboxing *)
+          val tynames = TyName.tyName_F64 :: TyName.tyName_F256 :: tynames (* for optimiser float unboxing *)
           val TCEnv1 = LambdaStatSem.restrict(TCEnv,{lvars=lvars,tynames=tynames,cons=cons,excons=excons})
           val rse1 = RegionStatEnv.restrict(rse,{lvars=lvars,tynames=tynames,cons=cons,excons=excons})
           val mulenv1 = Mul.restrict_efenv(mulenv,lvars)
