@@ -179,6 +179,7 @@ structure LambdaStatSem: LAMBDA_STAT_SEM =
 			       (tyName_WORD64, []),
 			       (tyName_REAL, []),
 			       (tyName_F64, []),
+			       (tyName_F256, []),
 			       (tyName_STRING, []),
 			       (tyName_CHAR, []),
 			       (tyName_LIST, [Con.con_NIL, Con.con_CONS]),

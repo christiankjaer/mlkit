@@ -129,6 +129,7 @@ structure InstsX64: INSTS_X64 =
     | sqrtsd of ea * ea
     | cvtsi2sdq of ea * ea
 
+    | vmovupd of ea * ea
     | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
     | vmulpd of ea * ea * ea
     | vsubpd of ea * ea * ea
@@ -424,6 +425,7 @@ structure InstsX64: INSTS_X64 =
                | sqrtsd a => emit_bin("sqrtsd", a)
                | cvtsi2sdq a => emit_bin("cvtsi2sdq", a)
 
+               | vmovupd (a1, a2) => emit_bin("vmovupd", (to_ymm a1, to_ymm a2))
                | vbroadcastsd (a1, a2) => emit_bin("vbroadcastsd", (a1, to_ymm a2))
                | vaddpd (a1, a2, a3) => emit_ter("vaddpd", (to_ymm a1, to_ymm a2, to_ymm a3))
                | vmulpd (a1, a2, a3) => emit_ter("vmulpd", (to_ymm a1, to_ymm a2, to_ymm a3))
@@ -687,6 +689,7 @@ structure InstsX64: INSTS_X64 =
              | xorps (ea1,ea2) => xorps (Em ea1,Em ea2)
              | sqrtsd (ea1,ea2) => sqrtsd (Em ea1,Em ea2)
              | cvtsi2sdq (ea1,ea2) => cvtsi2sdq (Em ea1,Em ea2)
+             | vmovupd (ea1, ea2) => vmovupd (Em ea1, Em ea2)
              | vaddpd (ea1, ea2, ea3) => vaddpd (Em ea1, Em ea2, Em ea3)
              | vmulpd (ea1, ea2, ea3) => vmulpd (Em ea1, Em ea2, Em ea3)
              | vsubpd (ea1, ea2, ea3) => vsubpd (Em ea1, Em ea2, Em ea3)

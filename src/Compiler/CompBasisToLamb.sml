@@ -134,7 +134,7 @@ structure CompBasisToLamb
                 raise x)
 	  val lvars = lvars_eq @ lvars
 	  val (OEnv1,cons,tynames) = OptLambda.restrict(OEnv,lvars,cons,tynames)
-          val tynames = TyName.tyName_F64 :: tynames (* for optimiser float unboxing *)
+          val tynames = TyName.tyName_F64 :: TyName.tyName_F256 :: tynames (* for optimiser float unboxing *)
 	  val TCEnv1 = LambdaStatSem.restrict(TCEnv,{lvars=lvars,tynames=tynames,cons=cons,excons=excons})
       in ({NEnv=NEnv1,
            TCEnv=TCEnv1,
