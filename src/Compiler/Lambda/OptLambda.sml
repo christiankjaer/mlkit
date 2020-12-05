@@ -686,6 +686,7 @@ structure OptLambda: OPT_LAMBDA =
                | "__f256_unbox" => true
                | "__plus_f256" => true
                | "__broadcast_f256" => true
+               | "__real_to_f64" => true
                | _ => false
          fun check e = if lvar_in_lamb lv e then raise Bad else false
          fun safeLook_sw safeLook (SWITCH(e,es,eopt)) =
