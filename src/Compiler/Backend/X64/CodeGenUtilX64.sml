@@ -537,15 +537,15 @@ struct
     (* Load vector into register (freg) from string *)
     fun load_vector (vector_aty, t, size_ff, freg) =
       fn C => case vector_aty
-                   of SS.PHREG_ATY x => I.vmovupd(D("0", x),R freg) :: C
+                   of SS.PHREG_ATY x => I.vmovupd(D("8", x),R freg) :: C
                     | _ => move_aty_into_reg(vector_aty,t,size_ff,
-                           I.vmovupd(D("0", t),R freg) :: C)
+                           I.vmovupd(D("8", t),R freg) :: C)
 
 
     (* Store vector in string (freg) *)
 
     fun store_vector (base_reg, t:reg, freg, C) =
-      I.vmovupd (R freg, D("0", base_reg)) :: C
+      I.vmovupd (R freg, D("8", base_reg)) :: C
 
     (* When tag free collection of pairs is enabled, a bit is stored
        in the region descriptor if the region is an infinite region
@@ -1977,10 +1977,12 @@ struct
              val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
              val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
          in
-           x_C(y_C(v_inst(R x, R y, R d) :: C'))
+           x_C(y_C(v_inst(R y, R x, R d) :: C'))
          end
 
      val plus_f256 = bin_f256_op "vaddpd" I.vaddpd
+     val mul_f256 = bin_f256_op "vmulpd" I.vmulpd
+     val minus_f256 = bin_f256_op "vsubpd" I.vsubpd
 
     fun broadcast_f256 (x,d,size_ff:int, C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
@@ -2749,12 +2751,12 @@ struct
          in load_vector (x, tmp_reg0, size_ff, d) C'
          end
 
-     fun f256_box_kill_tmp01 (b,x,d,size_ff,C) =
+     fun f256_box_kill_tmp01 (b,x,alloc,d,size_ff,C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
-             val (b_reg, b_C) = resolve_arg_aty(b, tmp_reg0, size_ff)
+             val (a, a_C) = resolve_arg_aty(alloc,tmp_reg1,size_ff)
              val (d_reg, C') = resolve_aty_def(d, tmp_reg0, size_ff, C)
-         in x_C(b_C(store_vector(b_reg,tmp_reg1,x,
-            copy(b_reg,d_reg, C'))))
+         in x_C(a_C(store_vector(a,tmp_reg1,x,
+            copy(a,d_reg, C'))))
          end
 
 end

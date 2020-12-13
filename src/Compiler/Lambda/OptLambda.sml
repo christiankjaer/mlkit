@@ -246,13 +246,20 @@ structure OptLambda: OPT_LAMBDA =
 		     Type=ARROWtype(argtypes,[restype])}
       fun f256_bin opr (x:exp,y:exp) : exp =
           PRIM(ccall ("__" ^ opr ^ "_f256") [f256Type,f256Type] f256Type, [x,y])
+      val allocVector : exp =
+        let val zero = PRIM(ccall "__real_to_f64" [realType] f64Type, [REAL ("0.0", NONE)])
+             in PRIM(BLOCKF64prim, [zero, zero, zero, zero])
+        end
     in
-      fun f256_box (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type] stringType, [x])
+      fun f256_box (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type] stringType,[x])
+      fun f256_box_alloc (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type, stringType] stringType,[x, allocVector])
       fun f256_unbox (x:exp) : exp = PRIM(ccall "__f256_unbox" [stringType] f256Type, [x])
 
       fun f256_broadcast (x: exp) : exp = PRIM(ccall "__broadcast_f256" [f64Type] f256Type, [x])
 
       val f256_plus = f256_bin "plus"
+      val f256_minus = f256_bin "minus"
+      val f256_mul = f256_bin "mul"
     end
 
    (* -----------------------------------------------------------------
@@ -685,8 +692,15 @@ structure OptLambda: OPT_LAMBDA =
                | "__f256_box" => true
                | "__f256_unbox" => true
                | "__plus_f256" => true
+               | "__minus_f256" => true
+               | "__mul_f256" => true
                | "__broadcast_f256" => true
                | "__real_to_f64" => true
+               | "__f64_to_real" => true
+               | "__blockf64_sub_real" => true
+               | "__blockf64_sub_f64" => true
+               | "__blockf64_update_real" => true
+               | "__blockf64_update_f64" => true
                | _ => false
          fun check e = if lvar_in_lamb lv e then raise Bad else false
          fun safeLook_sw safeLook (SWITCH(e,es,eopt)) =
@@ -1833,6 +1847,8 @@ structure OptLambda: OPT_LAMBDA =
                   end
                 | ("__m256d_broadcast", [x]) => (f256_box (f256_broadcast (real_to_f64 x)), CUNKNOWN)
                 | ("__m256d_plus", [x, y]) => reduce_f256bin f256_plus (x, y)
+                | ("__m256d_minus", [x, y]) => reduce_f256bin f256_minus (x, y)
+                | ("__m256d_mul", [x, y]) => reduce_f256bin f256_mul (x, y)
                 | _ => constantFolding env lamb fail
             else constantFolding env lamb fail
 	  | _ => constantFolding env lamb fail
@@ -2858,6 +2874,15 @@ structure OptLambda: OPT_LAMBDA =
 	 end
    end
 
+(* will convert the box primop into one the both allocs a blockf64 and then
+ * stores the vector register
+ *)
+fun alloc_vectors lamb =
+  case lamb of
+       PRIM(CCALLprim{name="__f256_box",...},[e]) => f256_box_alloc (alloc_vectors e)
+     | _ => map_lamb alloc_vectors lamb
+           
+
    local
    fun exec (e: LambdaExp) (scope: LambdaExp) : LambdaExp =
        let val lv = Lvars.newLvar()
@@ -3337,7 +3362,8 @@ structure OptLambda: OPT_LAMBDA =
 	let val (lamb,let_env) = functionalise_let let_env lamb
 	    val lamb = fix_conversion lamb
 	    val (lamb,inveta_env) = inverse_eta_for_fix_bound_lvars inveta_env lamb
-            val lamb = table2d_simplify lamb
+        val lamb = table2d_simplify lamb
+        val lamb = alloc_vectors lamb
 	in (lamb, (inveta_env, let_env))
 	end
 
