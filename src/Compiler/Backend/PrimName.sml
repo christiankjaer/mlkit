@@ -160,7 +160,8 @@ datatype prim =
 
          F256_box | F256_unbox |
 
-         M256d_plus | M256d_broadcast
+         M256d_plus | M256d_minus | M256d_mul | 
+         M256d_broadcast
 
 local
   structure M = OrderFinMap(struct type T = string
@@ -336,6 +337,8 @@ local
          ("__f256_box", F256_box),
          ("__f256_unbox", F256_unbox),
          ("__m256d_plus", M256d_plus),
+         ("__m256d_minus", M256d_minus),
+         ("__m256d_mul", M256d_mul),
          ("__m256d_broadcast", M256d_broadcast)
 ]
 
@@ -720,6 +723,8 @@ fun pp_prim (p:prim) : string =
       | F256_unbox => "M256_unbox"
 
       | M256d_plus => "M256d_plus"
+      | M256d_minus => "M256d_minus"
+      | M256d_mul => "M256d_mul"
       | M256d_broadcast => "M256d_broadcast"
 
 end
