@@ -113,10 +113,13 @@ signature INSTS_X64 =
 
     | vmovupd of ea * ea
     | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
-    | vmulpd of ea * ea * ea
     | vsubpd of ea * ea * ea
-    | vblendvpd of ea * ea * ea * ea
+    | vmulpd of ea * ea * ea
+    | vdivpd of ea * ea * ea
     | vbroadcastsd of ea * ea
+    | vblendvpd of ea * ea * ea * ea (* conditional move based on mask *)
+    | vcmppd of ea * ea * ea * ea (* compare and make mask *)
+    | vmovmskpd of ea * ea (* extract mask *)
 
     | fstpq of ea       (* store float and pop float stack *)
     | fldq of ea        (* push float onto the float stack *)

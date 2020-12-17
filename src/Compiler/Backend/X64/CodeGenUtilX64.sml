@@ -2030,6 +2030,15 @@ struct
      val plus_f256 = bin_f256_op "vaddpd" I.vaddpd
      val mul_f256 = bin_f256_op "vmulpd" I.vmulpd
      val minus_f256 = bin_f256_op "vsubpd" I.vsubpd
+     val div_f256 = bin_f256_op "vdivpd" I.vdivpd
+
+    fun cmp_f256 mode (x,y,d,size_ff:int,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+           in x_C(y_C(I.vcmppd(I mode, R y, R x, R d) :: C'))
+         end
+
 
     fun broadcast_f256 (x,d,size_ff:int, C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
@@ -2798,7 +2807,7 @@ struct
          in load_vector (x, tmp_reg0, size_ff, d) C'
          end
 
-     fun f256_box_kill_tmp01 (b,x,alloc,d,size_ff,C) =
+     fun f256_store_kill_tmp01 (x,alloc,d,size_ff,C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
              val (a, a_C) = resolve_arg_aty(alloc,tmp_reg1,size_ff)
              val (d_reg, C') = resolve_aty_def(d, tmp_reg0, size_ff, C)

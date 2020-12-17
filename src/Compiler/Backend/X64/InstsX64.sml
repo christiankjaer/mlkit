@@ -132,9 +132,12 @@ structure InstsX64: INSTS_X64 =
     | vmovupd of ea * ea
     | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
     | vmulpd of ea * ea * ea
+    | vdivpd of ea * ea * ea
     | vsubpd of ea * ea * ea
-    | vblendvpd of ea * ea * ea * ea
     | vbroadcastsd of ea * ea
+    | vblendvpd of ea * ea * ea * ea (* conditional move based on mask *)
+    | vcmppd of ea * ea * ea * ea (* compare and make mask *)
+    | vmovmskpd of ea * ea (* extract mask *)
 
     | fstpq of ea       (* store float and pop float stack *)
     | fldq of ea        (* push float onto the float stack *)
@@ -429,8 +432,11 @@ structure InstsX64: INSTS_X64 =
                | vbroadcastsd (a1, a2) => emit_bin("vbroadcastsd", (a1, to_ymm a2))
                | vaddpd (a1, a2, a3) => emit_ter("vaddpd", (to_ymm a1, to_ymm a2, to_ymm a3))
                | vmulpd (a1, a2, a3) => emit_ter("vmulpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vdivpd (a1, a2, a3) => emit_ter("vdivpd", (to_ymm a1, to_ymm a2, to_ymm a3))
                | vsubpd (a1, a2, a3) => emit_ter("vsubpd", (to_ymm a1, to_ymm a2, to_ymm a3))
                | vblendvpd (a1, a2, a3, a4) => emit_quad("vblendvpd", (to_ymm a1, to_ymm a2, to_ymm a3, to_ymm a4))
+               | vcmppd (a1, a2, a3, a4) => emit_quad ("vcmppd", (a1, to_ymm a2, to_ymm a3, to_ymm a4))
+               | vmovmskpd (a1, a2) => emit_bin ("vmovmskpd", (to_ymm a1, a2))
 
                | fstpq ea => emit_unary("fstpq", ea)
                | fldq ea => emit_unary("fldq", ea)
@@ -689,12 +695,15 @@ structure InstsX64: INSTS_X64 =
              | xorps (ea1,ea2) => xorps (Em ea1,Em ea2)
              | sqrtsd (ea1,ea2) => sqrtsd (Em ea1,Em ea2)
              | cvtsi2sdq (ea1,ea2) => cvtsi2sdq (Em ea1,Em ea2)
-             | vmovupd (ea1, ea2) => vmovupd (Em ea1, Em ea2)
+             | vmovupd (ea1, ea2) => vmovupd (Em ea1,Em ea2)
              | vaddpd (ea1, ea2, ea3) => vaddpd (Em ea1, Em ea2, Em ea3)
              | vmulpd (ea1, ea2, ea3) => vmulpd (Em ea1, Em ea2, Em ea3)
+             | vdivpd (ea1, ea2, ea3) => vdivpd (Em ea1, Em ea2, Em ea3)
              | vsubpd (ea1, ea2, ea3) => vsubpd (Em ea1, Em ea2, Em ea3)
-             | vblendvpd (ea1, ea2, ea3, ea4) => vblendvpd (Em ea1, Em ea2, Em ea3, Em ea4)
              | vbroadcastsd (ea1, ea2) => vbroadcastsd (Em ea1, Em ea2)
+             | vblendvpd (ea1, ea2, ea3, ea4) => vblendvpd (Em ea1, Em ea2, Em ea3, Em ea4)
+             | vcmppd (ea1, ea2, ea3, ea4) => vcmppd (Em ea1, Em ea2, Em ea3, Em ea4)
+             | vmovmskpd (a1, a2) => vmovmskpd (Em a1, Em a2)
              | fstpq ea => fstpq (Em ea)
              | fldq ea => fldq (Em ea)
              | jmp ea => jmp (Em ea)

@@ -252,7 +252,25 @@ structure OptLambda: OPT_LAMBDA =
         end
     in
       fun f256_box (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type] stringType,[x])
-      fun f256_box_alloc (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type, stringType] stringType,[x, allocVector])
+      (* let val box = allocVector
+      *      val () = storeVector(x, box)
+      *   in box
+      *)
+      fun f256_box_alloc (x:exp) : exp =
+        let val box = Lvars.newLvar ()
+            val boxVar = VAR {lvar = box, instances = [], regvars = []}
+            val storeExp: exp =
+              LET { pat = [(Lvars.newLvar (), [], unitType)]
+                  , bind = PRIM(ccall "__f256_store" [f256Type, stringType] unitType, [x, boxVar])
+                  , scope = boxVar
+                  }
+         in 
+           LET { pat = [(box, [], stringType)]
+               , bind = allocVector
+               , scope = storeExp
+               }
+        end
+
       fun f256_unbox (x:exp) : exp = PRIM(ccall "__f256_unbox" [stringType] f256Type, [x])
 
       fun f256_broadcast (x: exp) : exp = PRIM(ccall "__broadcast_f256" [f64Type] f256Type, [x])
@@ -260,6 +278,11 @@ structure OptLambda: OPT_LAMBDA =
       val f256_plus = f256_bin "plus"
       val f256_minus = f256_bin "minus"
       val f256_mul = f256_bin "mul"
+      val f256_div = f256_bin "div"
+      val f256_less = f256_bin "less"
+      val f256_lesseq = f256_bin "lesseq"
+      val f256_greater = f256_bin "greater"
+      val f256_greatereq = f256_bin "greatereq"
     end
 
    (* -----------------------------------------------------------------
@@ -689,19 +712,34 @@ structure OptLambda: OPT_LAMBDA =
          fun ok n =
              case n of
                  "__m256d_plus" => true
+               | "__m256d_minus" => true
+               | "__m256d_mul" => true
+               | "__m256d_div" => true
+               | "__m256d_less" => true
+               | "__m256d_lesseq" => true
+               | "__m256d_greater" => true
+               | "__m256d_greatereq" => true
+               | "__m256d_all" => true
+               | "__m256d_any" => true
+
                | "__m256d_broadcast" => true
                | "__f256_box" => true
                | "__f256_unbox" => true
+
                | "__plus_f256" => true
                | "__minus_f256" => true
                | "__mul_f256" => true
+               | "__div_f256" => true
+               | "__less_f256" => true
+               | "__lesseq_f256" => true
+               | "__greater_f256" => true
+               | "__greatereq_f256" => true
+               | "__all_f256" => true
+               | "__any_f256" => true
+
                | "__broadcast_f256" => true
                | "__real_to_f64" => true
                | "__f64_to_real" => true
-               | "__blockf64_sub_real" => true
-               | "__blockf64_sub_f64" => true
-               | "__blockf64_update_real" => true
-               | "__blockf64_update_f64" => true
                | _ => false
          fun check e = if lvar_in_lamb lv e then raise Bad else false
          fun safeLook_sw safeLook (SWITCH(e,es,eopt)) =
@@ -850,6 +888,13 @@ structure OptLambda: OPT_LAMBDA =
               | "__blockf64_sub_f64" => true
               | "__less_f64" => true
               | "__plus_f256" => true
+              | "__minus_f256" => true
+              | "__mul_f256" => true
+              | "__div_f256" => true
+              | "__less_f256" => true
+              | "__lesseq_f256" => true
+              | "__greater_f256" => true
+              | "__greatereq_f256" => true
               | _ => false) andalso simple_nonexpanding e1 andalso simple_nonexpanding e2
          | _ => false
 
@@ -1862,6 +1907,11 @@ structure OptLambda: OPT_LAMBDA =
                 | ("__m256d_plus", [x, y]) => reduce_f256bin f256_plus (x, y)
                 | ("__m256d_minus", [x, y]) => reduce_f256bin f256_minus (x, y)
                 | ("__m256d_mul", [x, y]) => reduce_f256bin f256_mul (x, y)
+                | ("__m256d_div", [x, y]) => reduce_f256bin f256_div (x, y)
+                | ("__m256d_less", [x, y]) => reduce_f256bin f256_less (x, y)
+                | ("__m256d_lesseq", [x, y]) => reduce_f256bin f256_lesseq (x, y)
+                | ("__m256d_greater", [x, y]) => reduce_f256bin f256_greater (x, y)
+                | ("__m256d_greatereq", [x, y]) => reduce_f256bin f256_greatereq (x, y)
                 | _ => constantFolding env lamb fail
             else constantFolding env lamb fail
 	  | _ => constantFolding env lamb fail

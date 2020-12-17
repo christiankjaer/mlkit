@@ -30,6 +30,8 @@ datatype prim =
          (* other primitives *)
          Less_real | Lesseq_real | Greater_real | Greatereq_real |
          Less_f64 | Lesseq_f64 | Greater_f64 | Greatereq_f64 |
+         Less_f256 | Lesseq_f256 | Greater_f256 | Greatereq_f256 |
+         All_f256 | Any_f256 |
 
 	 Plus_int31 | Plus_int32ub | Plus_int32b |
 	 Plus_word31 | Plus_word32ub | Plus_word32b |
@@ -49,7 +51,7 @@ datatype prim =
 	 Mul_word63 | Mul_word64ub | Mul_word64b |
          Mul_real | Mul_f64 | Mul_f256 |
 
-	 Div_real | Div_f64 |
+	 Div_real | Div_f64 | Div_f256 |
 
 	 Neg_int31 | Neg_int32ub | Neg_int32b |
 	 Neg_int63 | Neg_int64ub | Neg_int64b |
@@ -158,9 +160,11 @@ datatype prim =
          Blockf64_update_real | Blockf64_sub_real | Blockf64_size | Blockf64_alloc |
          Blockf64_update_f64 | Blockf64_sub_f64 |
 
-         F256_box | F256_unbox |
+         F256_box | F256_store | F256_unbox |
 
-         M256d_plus | M256d_minus | M256d_mul | 
+         M256d_plus | M256d_minus | M256d_mul | M256d_div |
+         M256d_less | M256d_lesseq | M256d_greater | M256d_greatereq |
+         M256d_all | M256d_any |
          M256d_broadcast
 
 local
@@ -200,6 +204,8 @@ local
   val pairs =
         [("__less_real", Less_real), ("__lesseq_real", Lesseq_real), ("__greater_real", Greater_real), ("__greatereq_real", Greatereq_real),
          ("__less_f64", Less_f64), ("__lesseq_f64", Lesseq_f64), ("__greater_f64", Greater_f64), ("__greatereq_f64", Greatereq_f64),
+         ("__less_f256", Less_f256), ("__lesseq_f256", Lesseq_f256), ("__greater_f256", Greater_f256), ("__greatereq_f256", Greatereq_f256),
+         ("__all_f256", All_f256), ("__any_f256", Any_f256),
 
 	 ("__plus_int31", Plus_int31), ("__plus_int32ub", Plus_int32ub), ("__plus_int32b", Plus_int32b),
 	 ("__plus_word31", Plus_word31), ("__plus_word32ub", Plus_word32ub), ("__plus_word32b", Plus_word32b),
@@ -219,7 +225,7 @@ local
 	 ("__mul_word63", Mul_word63), ("__mul_word64ub", Mul_word64ub), ("__mul_word64b", Mul_word64b),
      ("__mul_real", Mul_real), ("__mul_f64", Mul_f64), ("__mul_f256", Mul_f256),
 
-	 ("__div_real", Div_real), ("__div_f64", Div_f64),
+	 ("__div_real", Div_real), ("__div_f64", Div_f64), ("__div_f256", Div_f256),
 
 	 ("__neg_int31", Neg_int31), ("__neg_int32ub", Neg_int32ub), ("__neg_int32b", Neg_int32b),
 	 ("__neg_int63", Neg_int63), ("__neg_int64ub", Neg_int64ub), ("__neg_int64b", Neg_int64b),
@@ -334,11 +340,23 @@ local
          ("__blockf64_update_f64", Blockf64_update_f64),
          ("__blockf64_sub_f64", Blockf64_sub_f64),
          ("__broadcast_f256", Broadcast_f256),
+
          ("__f256_box", F256_box),
+         ("__f256_store", F256_store),
          ("__f256_unbox", F256_unbox),
+
+         ("__m256d_less", M256d_less),
+         ("__m256d_lesseq", M256d_lesseq),
+         ("__m256d_greater", M256d_greater),
+         ("__m256d_greatereq", M256d_greatereq),
+
          ("__m256d_plus", M256d_plus),
          ("__m256d_minus", M256d_minus),
          ("__m256d_mul", M256d_mul),
+         ("__m256d_div", M256d_div),
+         ("__m256d_any", M256d_any),
+         ("__m256d_all", M256d_all),
+
          ("__m256d_broadcast", M256d_broadcast)
 ]
 
@@ -501,6 +519,13 @@ fun pp_prim (p:prim) : string =
       | Greater_f64 => "Greater_f64"
       | Greatereq_f64 => "Greatereq_f64"
 
+      | Less_f256 => "Less_f256"
+      | Lesseq_f256 => "Lesseq_f256"
+      | Greater_f256 => "Greater_f256"
+      | Greatereq_f256 => "Greatereq_f256"
+      | All_f256 => "All_f256"
+      | Any_f256 => "Any_f256"
+
       | Plus_int31 => "Plus_int31"
       | Plus_int32ub => "Plus_int32ub"
       | Plus_int32b => "Plus_int32b"
@@ -551,6 +576,7 @@ fun pp_prim (p:prim) : string =
 
       | Div_real => "Div_real"
       | Div_f64 => "Div_f64"
+      | Div_f256 => "Div_f256"
 
       | Neg_int31 => "Neg_int31"
       | Neg_int32ub => "Neg_int32ub"
@@ -720,11 +746,22 @@ fun pp_prim (p:prim) : string =
 
       | Broadcast_f256 => "Broadcast_f256"
       | F256_box => "M256_box"
+      | F256_store => "M256_store"
       | F256_unbox => "M256_unbox"
 
       | M256d_plus => "M256d_plus"
       | M256d_minus => "M256d_minus"
       | M256d_mul => "M256d_mul"
+      | M256d_div => "M256d_div"
+
+      | M256d_less => "M256d_less"
+      | M256d_lesseq => "M256d_lesseq"
+      | M256d_greater => "M256d_greater"
+      | M256d_greatereq => "M256d_greatereq"
+
+      | M256d_any => "M256d_any"
+      | M256d_all => "M256d_all"
+
       | M256d_broadcast => "M256d_broadcast"
 
 end
