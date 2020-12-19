@@ -59,6 +59,8 @@ signature INSTS_X64 =
     | movb of ea * ea
     | movzbq of ea * ea
     | movslq of ea * ea
+    | cmove of ea * ea (* conditional move *)
+    | cmovne of ea * ea  (* conditional move *)
     | push of ea
     | leaq of ea * ea
     | pop of ea
@@ -95,6 +97,7 @@ signature INSTS_X64 =
     | shrq of ea * ea   (* unsigned *)
     | salq of ea * ea
     | cmpq of ea * ea
+    | testq of ea * ea
     | btq of ea * ea    (* bit test; sets carry flag *)
     | btrq of ea * ea   (* bit test and reset; sets carry flag *)
     | cmpxchgq of ea * ea

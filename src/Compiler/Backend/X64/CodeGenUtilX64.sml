@@ -2044,7 +2044,17 @@ struct
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
              val (d, C') = resolve_aty_def(d,tmp_freg1,size_ff, C)
          in
-           x_C(I.vbroadcastsd(R x, R d) :: C)
+           x_C(I.vbroadcastsd(R x, R d) :: C')
+         end
+
+    fun blend_f256 (x,y,mask,d,size_ff:int, C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
+             val (mask, mask_C) = resolve_arg_aty(mask,tmp_freg1,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(y_C(mask_C(
+           I.vblendvpd(R mask, R y, R x, R d) :: C')))
          end
 
 
@@ -2814,5 +2824,32 @@ struct
          in x_C(a_C(store_vector(a,tmp_reg1,x,
             copy(a,d_reg, C'))))
          end
+
+     fun f256_all (x,d,size_ff:int,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_reg1,size_ff, C)
+         in
+           x_C(
+           I.vmovmskpd (R x, R d) :: (* extract one bit from each mask *)
+           I.cmpq (I "0xF", R d) :: (* if all 4 are set *)
+           I.movq(I (i2s BI.ml_false), R d) ::
+           I.movq(I (i2s BI.ml_true), R tmp_reg0) ::
+           I.cmove(R tmp_reg0, R d) :: (* return true *)
+           C')
+         end
+
+     fun f256_any (x,d,size_ff:int,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_reg1,size_ff, C)
+         in
+           x_C(
+           I.vmovmskpd (R x, R d) ::
+           I.cmpq (I "0x0", R d) :: (* if just one is set *)
+           I.movq(I (i2s BI.ml_false), R d) ::
+           I.movq(I (i2s BI.ml_true), R tmp_reg0) ::
+           I.cmovne(R tmp_reg0, R d) :: (* return true *)
+           C')
+         end
+
 
 end

@@ -155,7 +155,7 @@ datatype prim =
          Max_f64 | Min_f64 | Real_to_f64 | F64_to_real | Sqrt_f64 |
          Int_to_f64 |
 
-         Broadcast_f256 |
+         Broadcast_f256 | Blend_f256 |
 
          Blockf64_update_real | Blockf64_sub_real | Blockf64_size | Blockf64_alloc |
          Blockf64_update_f64 | Blockf64_sub_f64 |
@@ -164,8 +164,7 @@ datatype prim =
 
          M256d_plus | M256d_minus | M256d_mul | M256d_div |
          M256d_less | M256d_lesseq | M256d_greater | M256d_greatereq |
-         M256d_all | M256d_any |
-         M256d_broadcast
+         M256d_all | M256d_any | M256d_blend | M256d_broadcast
 
 local
   structure M = OrderFinMap(struct type T = string
@@ -340,6 +339,7 @@ local
          ("__blockf64_update_f64", Blockf64_update_f64),
          ("__blockf64_sub_f64", Blockf64_sub_f64),
          ("__broadcast_f256", Broadcast_f256),
+         ("__blend_f256", Blend_f256),
 
          ("__f256_box", F256_box),
          ("__f256_store", F256_store),
@@ -356,6 +356,7 @@ local
          ("__m256d_div", M256d_div),
          ("__m256d_any", M256d_any),
          ("__m256d_all", M256d_all),
+         ("__m256d_blend", M256d_blend),
 
          ("__m256d_broadcast", M256d_broadcast)
 ]
@@ -745,6 +746,7 @@ fun pp_prim (p:prim) : string =
       | Blockf64_sub_f64 => "Blockf64_sub_f64"
 
       | Broadcast_f256 => "Broadcast_f256"
+      | Blend_f256 => "Blend_f256"
       | F256_box => "M256_box"
       | F256_store => "M256_store"
       | F256_unbox => "M256_unbox"
@@ -763,6 +765,7 @@ fun pp_prim (p:prim) : string =
       | M256d_all => "M256d_all"
 
       | M256d_broadcast => "M256d_broadcast"
+      | M256d_blend => "M256d_blend"
 
 end
 

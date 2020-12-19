@@ -274,6 +274,8 @@ structure OptLambda: OPT_LAMBDA =
       fun f256_unbox (x:exp) : exp = PRIM(ccall "__f256_unbox" [stringType] f256Type, [x])
 
       fun f256_broadcast (x: exp) : exp = PRIM(ccall "__broadcast_f256" [f64Type] f256Type, [x])
+      fun f256_blend (a: exp, b: exp, mask: exp) : exp =
+      	  PRIM(ccall "__blend_f256" [f256Type, f256Type, f256Type] f256Type, [a,b,mask])
 
       val f256_plus = f256_bin "plus"
       val f256_minus = f256_bin "minus"
@@ -283,6 +285,9 @@ structure OptLambda: OPT_LAMBDA =
       val f256_lesseq = f256_bin "lesseq"
       val f256_greater = f256_bin "greater"
       val f256_greatereq = f256_bin "greatereq"
+
+	  fun f256_any (x: exp): exp = PRIM(ccall "__any_f256" [f256Type] boolType, [x])
+	  fun f256_all (x: exp): exp = PRIM(ccall "__all_f256" [f256Type] boolType, [x])
     end
 
    (* -----------------------------------------------------------------
@@ -721,6 +726,7 @@ structure OptLambda: OPT_LAMBDA =
                | "__m256d_greatereq" => true
                | "__m256d_all" => true
                | "__m256d_any" => true
+               | "__m256d_blend" => true
 
                | "__m256d_broadcast" => true
                | "__f256_box" => true
@@ -736,6 +742,7 @@ structure OptLambda: OPT_LAMBDA =
                | "__greatereq_f256" => true
                | "__all_f256" => true
                | "__any_f256" => true
+               | "__blend_f256" => true
 
                | "__broadcast_f256" => true
                | "__real_to_f64" => true
@@ -1555,6 +1562,12 @@ structure OptLambda: OPT_LAMBDA =
           (tick "f256_unbox";
            (f256_box (f256binop (f256_unbox e1, f256_unbox e2)), CUNKNOWN))
 
+      fun reduce_f256any e =
+          (tick "f256_unbox"; (f256_any (f256_unbox e), CUNKNOWN))
+
+      fun reduce_f256all e =
+          (tick "f256_unbox"; (f256_all (f256_unbox e), CUNKNOWN))
+
       fun reduce_f64cmp f64cmp (e1,e2) =
           (tick "real_to_f64";
            (f64cmp (real_to_f64 e1, real_to_f64 e2), CUNKNOWN))
@@ -1904,6 +1917,8 @@ structure OptLambda: OPT_LAMBDA =
                       CUNKNOWN)
                   end
                 | ("__m256d_broadcast", [x]) => (f256_box (f256_broadcast (real_to_f64 x)), CUNKNOWN)
+                | ("__m256d_blend", [a, b, mask]) =>
+                		(f256_box (f256_blend (f256_unbox a, f256_unbox b, f256_unbox mask)), CUNKNOWN)
                 | ("__m256d_plus", [x, y]) => reduce_f256bin f256_plus (x, y)
                 | ("__m256d_minus", [x, y]) => reduce_f256bin f256_minus (x, y)
                 | ("__m256d_mul", [x, y]) => reduce_f256bin f256_mul (x, y)
@@ -1912,6 +1927,8 @@ structure OptLambda: OPT_LAMBDA =
                 | ("__m256d_lesseq", [x, y]) => reduce_f256bin f256_lesseq (x, y)
                 | ("__m256d_greater", [x, y]) => reduce_f256bin f256_greater (x, y)
                 | ("__m256d_greatereq", [x, y]) => reduce_f256bin f256_greatereq (x, y)
+                | ("__m256d_all", [x]) => reduce_f256all x
+                | ("__m256d_any", [x]) => reduce_f256any x
                 | _ => constantFolding env lamb fail
             else constantFolding env lamb fail
 	  | _ => constantFolding env lamb fail

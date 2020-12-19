@@ -77,6 +77,8 @@ structure InstsX64: INSTS_X64 =
     | movb of ea * ea
     | movzbq of ea * ea
     | movslq of ea * ea
+    | cmove of ea * ea (* conditional move *)
+    | cmovne of ea * ea  (* conditional move *)
     | push of ea
     | leaq of ea * ea
     | pop of ea
@@ -113,6 +115,7 @@ structure InstsX64: INSTS_X64 =
     | shrq of ea * ea   (* unsigned *)
     | salq of ea * ea
     | cmpq of ea * ea
+    | testq of ea * ea
     | btq of ea * ea    (* bit test; sets carry flag *)
     | btrq of ea * ea   (* bit test and reset; sets carry flag *)
     | cmpxchgq of ea * ea
@@ -376,6 +379,8 @@ structure InstsX64: INSTS_X64 =
                | movb a => emit_bin ("movb", a)
                | movzbq a => emit_bin ("movzbq", a)
                | movslq a => emit_bin ("movslq", a)
+               | cmove a => emit_bin ("cmove", a)
+               | cmovne a => emit_bin ("cmovne", a)
                | leaq a => emit_bin ("leaq", a)
                | push ea => emit_unary ("push", ea)
                | pop ea => emit_unary ("pop", ea)
@@ -412,6 +417,7 @@ structure InstsX64: INSTS_X64 =
                | shrq a => emit_bin("shrq", a)
                | salq a => emit_bin("salq", a)
                | cmpq a => emit_bin("cmpq", a)
+               | testq a => emit_bin("testq", a)
                | btq a => emit_bin("btq", a)
                | btrq a => emit_bin("btrq", a)
                | cmpxchgq a => emit_bin("lock cmpxchgq", a)
@@ -647,6 +653,8 @@ structure InstsX64: INSTS_X64 =
              | movb (ea1,ea2) => movb (Em ea1,Em ea2)
              | movzbq (ea1,ea2) => movzbq (Em ea1,Em ea2)
              | movslq (ea1,ea2) => movslq (Em ea1,Em ea2)
+             | cmove (ea1,ea2) => cmove (Em ea1,Em ea2)
+             | cmovne (ea1,ea2) => cmovne (Em ea1,Em ea2)
              | push ea => push (Em ea)
              | leaq (ea1,ea2) => leaq (Em ea1,Em ea2)
              | pop ea => pop (Em ea)
@@ -681,6 +689,7 @@ structure InstsX64: INSTS_X64 =
              | shrq (ea1,ea2) => shrq (Em ea1,Em ea2)
              | salq (ea1,ea2) => salq (Em ea1,Em ea2)
              | cmpq (ea1,ea2) => cmpq (Em ea1,Em ea2)
+             | testq (ea1,ea2) => testq (Em ea1,Em ea2)
              | btq (ea1,ea2) => btq (Em ea1,Em ea2)
              | btrq (ea1,ea2) => btrq (Em ea1,Em ea2)
              | cmpxchgq (ea1,ea2) => cmpxchgq (Em ea1,Em ea2)

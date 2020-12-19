@@ -953,6 +953,8 @@ struct
                             | Blockf64_size  => blockf64_size arg
                             | Broadcast_f256 => broadcast_f256 arg
                             | F256_unbox     => f256_unbox arg
+                            | Any_f256       => f256_any arg
+                            | All_f256       => f256_all arg
 
 
                             | Is_null => cmpi_kill_tmp01 {box=false,quad=false} I.je
@@ -1191,7 +1193,7 @@ struct
                           | Blockf64_update_real => blockf64_update_real (b,x,y,d,size_ff,C)
                           | Blockf64_sub_real => blockf64_sub_real (b,x,y,d,size_ff,C)
                           | Blockf64_update_f64 => blockf64_update_f64 (b,x,y,d,size_ff,C)
-                          | M256d_plus => die "M256d_plus: boxed operation not implemented"
+                          | Blend_f256 => blend_f256 (b,x,y,d,size_ff,C)
                           | _ => die ("unsupported prim with 3 args: " ^ PrimName.pp_prim name))
                      | _ => die ("PRIM(" ^ PrimName.pp_prim name ^ ") not implemented")))
                  end
