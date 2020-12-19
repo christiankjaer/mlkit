@@ -740,8 +740,6 @@ structure OptLambda: OPT_LAMBDA =
                | "__lesseq_f256" => true
                | "__greater_f256" => true
                | "__greatereq_f256" => true
-               | "__all_f256" => true
-               | "__any_f256" => true
                | "__blend_f256" => true
 
                | "__broadcast_f256" => true
