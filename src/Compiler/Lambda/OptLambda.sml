@@ -901,6 +901,10 @@ structure OptLambda: OPT_LAMBDA =
               | "__greater_f256" => true
               | "__greatereq_f256" => true
               | _ => false) andalso simple_nonexpanding e1 andalso simple_nonexpanding e2
+         | PRIM(CCALLprim{name,...},[e1,e2,e3]) =>
+         		 (case name of
+         		  "__blend_f256" => true
+				| _ => false) andalso simple_nonexpanding e1 andalso simple_nonexpanding e2 andalso simple_nonexpanding e3
          | _ => false
 
    (* =================================================================
