@@ -160,6 +160,9 @@ datatype prim =
          Blockf64_update_real | Blockf64_sub_real | Blockf64_size | Blockf64_alloc |
          Blockf64_update_f64 | Blockf64_sub_f64 |
 
+         Blockf64_update_m256d | Blockf64_update_f256 |
+         Blockf64_sub_m256d | Blockf64_sub_f256 |
+
          F256_box | F256_store | F256_unbox |
 
          M256d_plus | M256d_minus | M256d_mul | M256d_div |
@@ -340,6 +343,11 @@ local
          ("__blockf64_sub_f64", Blockf64_sub_f64),
          ("__broadcast_f256", Broadcast_f256),
          ("__blend_f256", Blend_f256),
+
+         ("__blockf64_update_m256d", Blockf64_update_m256d),
+         ("__blockf64_sub_m256d", Blockf64_sub_m256d),
+         ("__blockf64_update_f256", Blockf64_update_f256),
+         ("__blockf64_sub_f256", Blockf64_sub_f256),
 
          ("__f256_box", F256_box),
          ("__f256_store", F256_store),
@@ -744,6 +752,11 @@ fun pp_prim (p:prim) : string =
       | Blockf64_alloc => "Blockf64_alloc"
       | Blockf64_update_f64 => "Blockf64_update_f64"
       | Blockf64_sub_f64 => "Blockf64_sub_f64"
+
+      | Blockf64_update_m256d => "Blockf64_update_m256d"
+      | Blockf64_sub_m256d => "Blockf64_sub_m256d"
+      | Blockf64_update_f256 => "Blockf64_update_f256"
+      | Blockf64_sub_f256 => "Blockf64_sub_f256"
 
       | Broadcast_f256 => "Broadcast_f256"
       | Blend_f256 => "Blend_f256"

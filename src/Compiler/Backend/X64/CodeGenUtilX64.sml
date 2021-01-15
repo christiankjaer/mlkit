@@ -2812,6 +2812,25 @@ struct
               end
          end
 
+     fun blockf64_update_f256 (t,i,x,d,size_ff,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+              in x_C(
+              move_aty_into_reg(i,tmp_reg1,size_ff,                 (* tmp_reg1 = i *)
+              move_aty_into_reg(t,tmp_reg0,size_ff,                 (* tmp_reg0 = t *)
+              (I.vmovupd(R x, DD("8",tmp_reg0,tmp_reg1,"8")) ::       (* *(8+tmp_reg0+8*tmp_reg1) = freg *)
+              C))))
+         end
+
+     fun blockf64_sub_f256 (t,i,d,size_ff,C) =
+         let val (t_reg,t_C) = resolve_arg_aty(t,tmp_reg1,size_ff)
+             val (d,C') = resolve_aty_def(d,tmp_freg0,size_ff,C)
+         in let val (i_reg,i_C) = resolve_arg_aty(i,tmp_reg0,size_ff)
+              in t_C(i_C(
+                 I.vmovupd(DD("8",t_reg,i_reg,"8"), R d) ::
+                 C'))
+              end
+         end
+
      fun f256_unbox (x,d,size_ff,C) =
          let val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff,C)
          in load_vector (x, tmp_reg0, size_ff, d) C'

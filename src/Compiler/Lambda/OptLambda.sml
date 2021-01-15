@@ -891,6 +891,7 @@ structure OptLambda: OPT_LAMBDA =
               | "__max_f64" => true
               | "__min_f64" => true
               | "__blockf64_sub_f64" => true
+              | "__blockf64_sub_f256" => true
               | "__less_f64" => true
               | "__plus_f256" => true
               | "__minus_f256" => true
@@ -1916,6 +1917,28 @@ structure OptLambda: OPT_LAMBDA =
                      (PRIM(CCALLprim{name="__blockf64_update_f64",instances=[],tyvars=[],
                                      Type=ARROWtype([bType,iType,f64Type],[unitType])},
                            [t,i,#1(reduce(env,(real_to_f64 v,CUNKNOWN)))]),
+                      CUNKNOWN)
+                  end
+                | ("__blockf64_sub_m256d",[t,i]) =>
+                  let val argTypes =
+                          case Type of
+                              ARROWtype(argTypes, _) => argTypes
+                            | _ => die "prim(__blockf64_sub_m256d): expecting arrow type"
+                  in tick "f256_box";
+                     (f256_box (PRIM(CCALLprim{name="__blockf64_sub_f256",instances=[],tyvars=[],
+                                                  Type=ARROWtype(argTypes,[f256Type])},
+                                        [t,i])),
+                      CUNKNOWN)
+                  end
+                | ("__blockf64_update_m256d",[t,i,v]) =>
+                  let val (bType,iType) =
+                          case Type of
+                              ARROWtype([bType,iType,_], _) => (bType,iType)
+                            | _ => die "prim(__blockf64_update_m256d): expecting arrow type with three args"
+                  in tick "f256_unbox";
+                     (PRIM(CCALLprim{name="__blockf64_update_f256",instances=[],tyvars=[],
+                                     Type=ARROWtype([bType,iType,f256Type],[unitType])},
+                           [t,i,#1(reduce(env,(f256_unbox v,CUNKNOWN)))]),
                       CUNKNOWN)
                   end
                 | ("__m256d_broadcast", [x]) => (f256_box (f256_broadcast (real_to_f64 x)), CUNKNOWN)

@@ -1144,6 +1144,7 @@ struct
                             | F64_to_real => f64_to_real_kill_tmp01 arg
                             | Blockf64_alloc => blockf64_alloc arg
                             | Blockf64_sub_f64 => blockf64_sub_f64 arg
+                            | Blockf64_sub_f256 => blockf64_sub_f256 arg
 
                             | Plus_f256 => plus_f256 arg
                             | Minus_f256 => minus_f256 arg
@@ -1193,6 +1194,7 @@ struct
                           | Blockf64_update_real => blockf64_update_real (b,x,y,d,size_ff,C)
                           | Blockf64_sub_real => blockf64_sub_real (b,x,y,d,size_ff,C)
                           | Blockf64_update_f64 => blockf64_update_f64 (b,x,y,d,size_ff,C)
+                          | Blockf64_update_f256 => blockf64_update_f256 (b,x,y,d,size_ff,C)
                           | Blend_f256 => blend_f256 (b,x,y,d,size_ff,C)
                           | _ => die ("unsupported prim with 3 args: " ^ PrimName.pp_prim name))
                      | _ => die ("PRIM(" ^ PrimName.pp_prim name ^ ") not implemented")))
