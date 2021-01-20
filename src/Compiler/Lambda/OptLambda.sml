@@ -247,7 +247,7 @@ structure OptLambda: OPT_LAMBDA =
       fun f256_bin opr (x:exp,y:exp) : exp =
           PRIM(ccall ("__" ^ opr ^ "_f256") [f256Type,f256Type] f256Type, [x,y])
       val allocVector : exp =
-        let val zero = PRIM(ccall "__real_to_f64" [realType] f64Type, [REAL ("0.0", NONE)])
+        let val zero = F64 "0.0"
              in PRIM(BLOCKF64prim, [zero, zero, zero, zero])
         end
     in
@@ -276,6 +276,10 @@ structure OptLambda: OPT_LAMBDA =
       fun f256_broadcast (x: exp) : exp = PRIM(ccall "__broadcast_f256" [f64Type] f256Type, [x])
       fun f256_blend (a: exp, b: exp, mask: exp) : exp =
       	  PRIM(ccall "__blend_f256" [f256Type, f256Type, f256Type] f256Type, [a,b,mask])
+      fun f256_product (a: exp) : exp =
+      	  PRIM(ccall "__product_f256" [f256Type] f64Type, [a])
+      fun f256_sum (a: exp) : exp =
+      	  PRIM(ccall "__sum_f256" [f256Type] f64Type, [a])
 
       val f256_plus = f256_bin "plus"
       val f256_minus = f256_bin "minus"
@@ -740,6 +744,8 @@ structure OptLambda: OPT_LAMBDA =
                | "__lesseq_f256" => true
                | "__greater_f256" => true
                | "__greatereq_f256" => true
+			   | "__all_f256" => true
+			   | "__any_f256" => true
                | "__blend_f256" => true
 
                | "__broadcast_f256" => true
@@ -1956,6 +1962,8 @@ structure OptLambda: OPT_LAMBDA =
                 | ("__m256d_greatereq", [x, y]) => reduce_f256bin f256_greatereq (x, y)
                 | ("__m256d_all", [x]) => reduce_f256all x
                 | ("__m256d_any", [x]) => reduce_f256any x
+                | ("__m256d_sum", [a]) => (f64_to_real (f256_sum (f256_unbox a)), CUNKNOWN)
+                | ("__m256d_product", [a]) => (f64_to_real (f256_product (f256_unbox a)), CUNKNOWN)
                 | _ => constantFolding env lamb fail
             else constantFolding env lamb fail
 	  | _ => constantFolding env lamb fail

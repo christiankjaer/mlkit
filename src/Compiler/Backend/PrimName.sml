@@ -167,7 +167,8 @@ datatype prim =
 
          M256d_plus | M256d_minus | M256d_mul | M256d_div |
          M256d_less | M256d_lesseq | M256d_greater | M256d_greatereq |
-         M256d_all | M256d_any | M256d_blend | M256d_broadcast
+         M256d_all | M256d_any | M256d_blend | M256d_broadcast |
+         M256d_sum | M256d_product | Sum_f256 | Product_f256
 
 local
   structure M = OrderFinMap(struct type T = string
@@ -365,8 +366,15 @@ local
          ("__m256d_any", M256d_any),
          ("__m256d_all", M256d_all),
          ("__m256d_blend", M256d_blend),
+         ("__m256d_sum", M256d_sum),
+         ("__m256d_product", M256d_product),
 
-         ("__m256d_broadcast", M256d_broadcast)
+         ("__m256d_broadcast", M256d_broadcast),
+
+         ("__m256d_sum", M256d_sum),
+         ("__m256d_product", M256d_product),
+         ("__sum_f256", Sum_f256),
+         ("__product_f256", Product_f256)
 ]
 
   val M = M.fromList pairs
@@ -779,6 +787,11 @@ fun pp_prim (p:prim) : string =
 
       | M256d_broadcast => "M256d_broadcast"
       | M256d_blend => "M256d_blend"
+    
+	  | M256d_sum => "M256d_sum"
+	  | M256d_product => "M256d_product"
+	  | Sum_f256 => "Sum_f256"
+	  | Product_f256 => "Product_f256"
 
 end
 
