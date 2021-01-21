@@ -2032,6 +2032,30 @@ struct
      val minus_f256 = bin_f256_op "vsubpd" I.vsubpd
      val div_f256 = bin_f256_op "vdivpd" I.vdivpd
 
+    fun f256_sum (x,d,size_ff,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(
+            I.vextractf128 (I "0x1", R x, R tmp_freg0) ::
+            I.vaddpd_128 (R x, R tmp_freg0, R x) ::
+            I.vunpckhpd_128 (R x, R x, R tmp_freg0) ::
+            I.vaddsd (R tmp_freg0, R x, R d) :: C'
+           )
+         end
+
+    fun f256_product (x,d,size_ff,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(
+            I.vextractf128 (I "0x1", R x, R tmp_freg0) ::
+            I.vmulpd_128 (R x, R tmp_freg0, R x) ::
+            I.vunpckhpd_128 (R x, R x, R tmp_freg0) ::
+            I.vmulsd (R tmp_freg0, R x, R d) :: C'
+           )
+         end
+
     fun cmp_f256 mode (x,y,d,size_ff:int,C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
              val (y, y_C) = resolve_arg_aty(y,tmp_freg1,size_ff)
@@ -2870,5 +2894,20 @@ struct
            C')
          end
 
+     fun f256_true (d,size_ff:int,C) =
+         let
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           I.vpcmpeqd (R d, R d, R d) :: (* This should return 1...1 *)
+           C'
+         end
+
+     fun f256_false (d,size_ff:int,C) =
+         let
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           I.vpxor (R d, R d, R d) :: (* This should return 0...0 *)
+           C'
+         end
 
 end

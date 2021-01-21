@@ -292,6 +292,9 @@ structure OptLambda: OPT_LAMBDA =
 
 	  fun f256_any (x: exp): exp = PRIM(ccall "__any_f256" [f256Type] boolType, [x])
 	  fun f256_all (x: exp): exp = PRIM(ccall "__all_f256" [f256Type] boolType, [x])
+
+	  val f256_true: exp = PRIM(ccall "__true_f256" [] f256Type, [])
+      val f256_false: exp = PRIM(ccall "__false_f256" [] f256Type, [])
     end
 
    (* -----------------------------------------------------------------
@@ -731,6 +734,10 @@ structure OptLambda: OPT_LAMBDA =
                | "__m256d_all" => true
                | "__m256d_any" => true
                | "__m256d_blend" => true
+               | "__m256d_true" => true
+               | "__m256d_false" => true
+               | "__m256d_sum" => true
+               | "__m256d_product" => true
 
                | "__m256d_broadcast" => true
                | "__f256_box" => true
@@ -747,6 +754,10 @@ structure OptLambda: OPT_LAMBDA =
 			   | "__all_f256" => true
 			   | "__any_f256" => true
                | "__blend_f256" => true
+			   | "__true_f256" => true
+               | "__false_f256" => true
+			   | "__sum_f256" => true
+               | "__product_f256" => true
 
                | "__broadcast_f256" => true
                | "__real_to_f64" => true
@@ -880,6 +891,11 @@ structure OptLambda: OPT_LAMBDA =
          | F256 _ => true
          | LET{pat,bind,scope} => simple_nonexpanding bind andalso simple_nonexpanding scope
          | PRIM(SELECTprim _, [e]) => simple_nonexpanding e
+         | PRIM(CCALLprim{name,...},[]) =>
+         		 (case name of
+			     "__false_f256" => true
+			   | "__true_f256" => true
+			   | _ => false)
          | PRIM(CCALLprim{name,...},[e]) =>
            (case name of
                 "__real_to_f64" => true
@@ -889,6 +905,8 @@ structure OptLambda: OPT_LAMBDA =
               | "__int_to_f64" => true
               | "__f256_unbox" => true
               | "__broadcast_f256" => true
+              | "__sum_f256" => true
+              | "__product_f256" => true
               | _ => false) andalso simple_nonexpanding e
          | PRIM(CCALLprim{name,...},[e1,e2]) =>
            (case name of
@@ -1964,6 +1982,8 @@ structure OptLambda: OPT_LAMBDA =
                 | ("__m256d_any", [x]) => reduce_f256any x
                 | ("__m256d_sum", [a]) => (f64_to_real (f256_sum (f256_unbox a)), CUNKNOWN)
                 | ("__m256d_product", [a]) => (f64_to_real (f256_product (f256_unbox a)), CUNKNOWN)
+                | ("__m256d_true", []) => (f256_box f256_true, CUNKNOWN)
+                | ("__m256d_false", []) => (f256_box f256_false, CUNKNOWN)
                 | _ => constantFolding env lamb fail
             else constantFolding env lamb fail
 	  | _ => constantFolding env lamb fail

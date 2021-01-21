@@ -115,14 +115,28 @@ signature INSTS_X64 =
     | cvtsi2sdq of ea * ea
 
     | vmovupd of ea * ea
+
     | vaddpd of ea * ea * ea (* AVX OPERATIONS *)
+    | vaddpd_128 of ea * ea * ea (* 128 bit version *)
+    | vaddsd of ea * ea * ea (* 64 bit version *)
+
     | vsubpd of ea * ea * ea
+
     | vmulpd of ea * ea * ea
+    | vmulpd_128 of ea * ea * ea (* 128 bit version *)
+    | vmulsd of ea * ea * ea (* 64 bit version *)
+
     | vdivpd of ea * ea * ea
     | vbroadcastsd of ea * ea
     | vblendvpd of ea * ea * ea * ea (* conditional move based on mask *)
     | vcmppd of ea * ea * ea * ea (* compare and make mask *)
     | vmovmskpd of ea * ea (* extract mask *)
+    | vpcmpeqd of ea * ea * ea (* equality of packed vector, useful for generating all ones *)
+    | vpxor of ea * ea * ea (* xor of packed vector, useful for generating all zeroes *)
+    | vextractf128 of ea * ea * ea (* extract 128 bits of a 256 bit register *)
+
+    | vunpckhpd of ea * ea * ea (* unpack and interleave *)
+    | vunpckhpd_128 of ea * ea * ea (* unpack and interleave, 128 bit version *)
 
     | fstpq of ea       (* store float and pop float stack *)
     | fldq of ea        (* push float onto the float stack *)

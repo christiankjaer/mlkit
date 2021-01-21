@@ -864,6 +864,8 @@ struct
                           move_reg_into_aty(tmp_reg0,d,size_ff,
                           I.addq(I "1", R tmp_reg0) ::
                           I.movq(R tmp_reg0, L exn_counter_lab) :: C)
+                         | True_f256 => f256_true (d,size_ff,C)
+                         | False_f256 => f256_false (d,size_ff,C)
                          | _ => die ("unsupported prim with 0 args: " ^ PrimName.pp_prim name))
                      | [x] =>
                        let val arg = (x,d,size_ff,C)
@@ -955,7 +957,8 @@ struct
                             | F256_unbox     => f256_unbox arg
                             | Any_f256       => f256_any arg
                             | All_f256       => f256_all arg
-
+                            | Product_f256   => f256_product arg
+                            | Sum_f256       => f256_sum arg
 
                             | Is_null => cmpi_kill_tmp01 {box=false,quad=false} I.je
                                                          (x, SS.INTEGER_ATY{value=IntInf.fromInt 0,
