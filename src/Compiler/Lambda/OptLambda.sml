@@ -246,10 +246,7 @@ structure OptLambda: OPT_LAMBDA =
 		     Type=ARROWtype(argtypes,[restype])}
       fun f256_bin opr (x:exp,y:exp) : exp =
           PRIM(ccall ("__" ^ opr ^ "_f256") [f256Type,f256Type] f256Type, [x,y])
-      val allocVector : exp =
-        let val zero = F64 "0.0"
-             in PRIM(BLOCKF64prim, [zero, zero, zero, zero])
-        end
+      val allocVector : exp = PRIM(SCRATCHMEMprim 32, [])
     in
       fun f256_box (x:exp) : exp = PRIM(ccall "__f256_box" [f256Type] stringType,[x])
       (* let val box = allocVector
