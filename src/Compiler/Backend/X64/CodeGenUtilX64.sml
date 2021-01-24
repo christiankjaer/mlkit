@@ -2031,6 +2031,18 @@ struct
      val mul_f256 = bin_f256_op "vmulpd" I.vmulpd
      val minus_f256 = bin_f256_op "vsubpd" I.vsubpd
      val div_f256 = bin_f256_op "vdivpd" I.vdivpd
+     val and_f256 = bin_f256_op "vandpd" I.vandpd
+     val or_f256 = bin_f256_op "vorpd" I.vorpd
+
+    fun not_f256 (x,d,size_ff:int,C) =
+         let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)
+             val (d, C') = resolve_aty_def(d,tmp_freg0,size_ff, C)
+         in
+           x_C(
+             I.vpcmpeqd (R tmp_freg0, R tmp_freg0, R tmp_freg0) :: (* This should return 1...1 *)
+             I.vpxor (R x, R tmp_freg0, R d) :: (* This should return 0...0 *)
+           C')
+         end
 
     fun f256_sum (x,d,size_ff,C) =
          let val (x, x_C) = resolve_arg_aty(x,tmp_freg0,size_ff)

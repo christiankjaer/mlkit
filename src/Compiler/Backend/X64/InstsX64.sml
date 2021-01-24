@@ -142,8 +142,12 @@ structure InstsX64: INSTS_X64 =
     | vmulpd_128 of ea * ea * ea (* 128 bit version *)
     | vmulsd of ea * ea * ea (* 64 bit version *)
 
-    | vdivpd of ea * ea * ea
     | vsubpd of ea * ea * ea
+    | vdivpd of ea * ea * ea
+
+    | vandpd of ea * ea * ea
+    | vorpd of ea * ea * ea
+
     | vbroadcastsd of ea * ea
     | vblendvpd of ea * ea * ea * ea (* conditional move based on mask *)
     | vcmppd of ea * ea * ea * ea (* compare and make mask *)
@@ -459,6 +463,9 @@ structure InstsX64: INSTS_X64 =
 
                | vdivpd (a1, a2, a3) => emit_ter("vdivpd", (to_ymm a1, to_ymm a2, to_ymm a3))
                | vsubpd (a1, a2, a3) => emit_ter("vsubpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vandpd (a1, a2, a3) => emit_ter("vandpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+               | vorpd (a1, a2, a3) => emit_ter("vorpd", (to_ymm a1, to_ymm a2, to_ymm a3))
+
                | vblendvpd (a1, a2, a3, a4) => emit_quad("vblendvpd", (to_ymm a1, to_ymm a2, to_ymm a3, to_ymm a4))
                | vcmppd (a1, a2, a3, a4) => emit_quad ("vcmppd", (a1, to_ymm a2, to_ymm a3, to_ymm a4))
                | vmovmskpd (a1, a2) => emit_bin ("vmovmskpd", (to_ymm a1, a2))
@@ -742,12 +749,15 @@ structure InstsX64: INSTS_X64 =
 
              | vdivpd (ea1, ea2, ea3) => vdivpd (Em ea1, Em ea2, Em ea3)
              | vsubpd (ea1, ea2, ea3) => vsubpd (Em ea1, Em ea2, Em ea3)
+             | vandpd (ea1, ea2, ea3) => vandpd (Em ea1, Em ea2, Em ea3)
+             | vorpd (ea1, ea2, ea3) => vorpd (Em ea1, Em ea2, Em ea3)
+             | vpxor (ea1, ea2, ea3) => vpxor (Em ea1, Em ea2, Em ea3)
+
              | vbroadcastsd (ea1, ea2) => vbroadcastsd (Em ea1, Em ea2)
              | vblendvpd (ea1, ea2, ea3, ea4) => vblendvpd (Em ea1, Em ea2, Em ea3, Em ea4)
              | vcmppd (ea1, ea2, ea3, ea4) => vcmppd (Em ea1, Em ea2, Em ea3, Em ea4)
              | vmovmskpd (a1, a2) => vmovmskpd (Em a1, Em a2)
              | vpcmpeqd (ea1, ea2, ea3) => vpcmpeqd (Em ea1, Em ea2, Em ea3)
-             | vpxor (ea1, ea2, ea3) => vpxor (Em ea1, Em ea2, Em ea3)
              | vextractf128 (ea1, ea2, ea3) => vextractf128 (Em ea1, Em ea2, Em ea3)
              | vunpckhpd (ea1, ea2, ea3) => vunpckhpd (Em ea1, Em ea2, Em ea3)
              | vunpckhpd_128 (ea1, ea2, ea3) => vunpckhpd_128 (Em ea1, Em ea2, Em ea3)

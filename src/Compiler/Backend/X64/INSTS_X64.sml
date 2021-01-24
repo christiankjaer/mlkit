@@ -127,6 +127,10 @@ signature INSTS_X64 =
     | vmulsd of ea * ea * ea (* 64 bit version *)
 
     | vdivpd of ea * ea * ea
+
+    | vandpd of ea * ea * ea
+    | vorpd of ea * ea * ea
+
     | vbroadcastsd of ea * ea
     | vblendvpd of ea * ea * ea * ea (* conditional move based on mask *)
     | vcmppd of ea * ea * ea * ea (* compare and make mask *)

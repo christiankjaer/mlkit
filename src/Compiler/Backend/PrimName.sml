@@ -31,7 +31,7 @@ datatype prim =
          Less_real | Lesseq_real | Greater_real | Greatereq_real |
          Less_f64 | Lesseq_f64 | Greater_f64 | Greatereq_f64 |
          Less_f256 | Lesseq_f256 | Greater_f256 | Greatereq_f256 |
-         All_f256 | Any_f256 |
+         All_f256 | Any_f256 | And_f256 | Or_f256 | Not_f256 |
 
 	 Plus_int31 | Plus_int32ub | Plus_int32b |
 	 Plus_word31 | Plus_word32ub | Plus_word32b |
@@ -169,6 +169,7 @@ datatype prim =
          M256d_less | M256d_lesseq | M256d_greater | M256d_greatereq |
          M256d_all | M256d_any | M256d_blend | M256d_broadcast |
          M256d_sum | M256d_product | Sum_f256 | Product_f256 |
+         M256d_and | M256d_or | M256d_not |
 
          M256d_true | M256d_false | True_f256 | False_f256
 
@@ -210,7 +211,7 @@ local
         [("__less_real", Less_real), ("__lesseq_real", Lesseq_real), ("__greater_real", Greater_real), ("__greatereq_real", Greatereq_real),
          ("__less_f64", Less_f64), ("__lesseq_f64", Lesseq_f64), ("__greater_f64", Greater_f64), ("__greatereq_f64", Greatereq_f64),
          ("__less_f256", Less_f256), ("__lesseq_f256", Lesseq_f256), ("__greater_f256", Greater_f256), ("__greatereq_f256", Greatereq_f256),
-         ("__all_f256", All_f256), ("__any_f256", Any_f256),
+         ("__all_f256", All_f256), ("__any_f256", Any_f256), ("__and_f256", And_f256), ("__or_f256", Or_f256), ("__not_f256", Not_f256),
 
 	 ("__plus_int31", Plus_int31), ("__plus_int32ub", Plus_int32ub), ("__plus_int32b", Plus_int32b),
 	 ("__plus_word31", Plus_word31), ("__plus_word32ub", Plus_word32ub), ("__plus_word32b", Plus_word32b),
@@ -367,6 +368,10 @@ local
          ("__m256d_div", M256d_div),
          ("__m256d_any", M256d_any),
          ("__m256d_all", M256d_all),
+         ("__m256d_and", M256d_and),
+         ("__m256d_or", M256d_or),
+         ("__m256d_not", M256d_not),
+
          ("__m256d_blend", M256d_blend),
          ("__m256d_sum", M256d_sum),
          ("__m256d_product", M256d_product),
@@ -549,6 +554,9 @@ fun pp_prim (p:prim) : string =
       | Greatereq_f256 => "Greatereq_f256"
       | All_f256 => "All_f256"
       | Any_f256 => "Any_f256"
+      | And_f256 => "And_f256"
+      | Or_f256 => "Or_f256"
+      | Not_f256 => "Not_f256"
 
       | Plus_int31 => "Plus_int31"
       | Plus_int32ub => "Plus_int32ub"
@@ -791,6 +799,10 @@ fun pp_prim (p:prim) : string =
 
       | M256d_any => "M256d_any"
       | M256d_all => "M256d_all"
+
+      | M256d_and => "M256d_and"
+      | M256d_or => "M256d_or"
+      | M256d_not => "M256d_not"
 
       | M256d_broadcast => "M256d_broadcast"
       | M256d_blend => "M256d_blend"

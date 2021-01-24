@@ -959,6 +959,7 @@ struct
                             | All_f256       => f256_all arg
                             | Product_f256   => f256_product arg
                             | Sum_f256       => f256_sum arg
+                            | Not_f256       => not_f256 arg
 
                             | Is_null => cmpi_kill_tmp01 {box=false,quad=false} I.je
                                                          (x, SS.INTEGER_ATY{value=IntInf.fromInt 0,
@@ -1153,6 +1154,8 @@ struct
                             | Minus_f256 => minus_f256 arg
                             | Mul_f256 => mul_f256 arg
                             | Div_f256 => div_f256 arg
+                            | And_f256 => and_f256 arg
+                            | Or_f256 => or_f256 arg
                             | Less_f256 => cmp_f256 "0x1" arg
                             | Lesseq_f256 => cmp_f256 "0x2" arg
                             | Greater_f256 => cmp_f256 "0xE" arg

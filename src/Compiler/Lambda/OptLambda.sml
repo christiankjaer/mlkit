@@ -280,6 +280,8 @@ structure OptLambda: OPT_LAMBDA =
 
       val f256_plus = f256_bin "plus"
       val f256_minus = f256_bin "minus"
+      val f256_and = f256_bin "and"
+      val f256_or = f256_bin "or"
       val f256_mul = f256_bin "mul"
       val f256_div = f256_bin "div"
       val f256_less = f256_bin "less"
@@ -289,6 +291,7 @@ structure OptLambda: OPT_LAMBDA =
 
 	  fun f256_any (x: exp): exp = PRIM(ccall "__any_f256" [f256Type] boolType, [x])
 	  fun f256_all (x: exp): exp = PRIM(ccall "__all_f256" [f256Type] boolType, [x])
+	  fun f256_not (x: exp): exp = PRIM(ccall "__not_f256" [f256Type] f256Type, [x])
 
 	  val f256_true: exp = PRIM(ccall "__true_f256" [] f256Type, [])
       val f256_false: exp = PRIM(ccall "__false_f256" [] f256Type, [])
@@ -724,6 +727,9 @@ structure OptLambda: OPT_LAMBDA =
                | "__m256d_minus" => true
                | "__m256d_mul" => true
                | "__m256d_div" => true
+               | "__m256d_and" => true
+               | "__m256d_or" => true
+               | "__m256d_nor" => true
                | "__m256d_less" => true
                | "__m256d_lesseq" => true
                | "__m256d_greater" => true
@@ -744,6 +750,9 @@ structure OptLambda: OPT_LAMBDA =
                | "__minus_f256" => true
                | "__mul_f256" => true
                | "__div_f256" => true
+               | "__and_f256" => true
+               | "__or_f256" => true
+               | "__not_f256" => true
                | "__less_f256" => true
                | "__lesseq_f256" => true
                | "__greater_f256" => true
@@ -904,6 +913,7 @@ structure OptLambda: OPT_LAMBDA =
               | "__broadcast_f256" => true
               | "__sum_f256" => true
               | "__product_f256" => true
+              | "__not_f256" => true
               | _ => false) andalso simple_nonexpanding e
          | PRIM(CCALLprim{name,...},[e1,e2]) =>
            (case name of
@@ -920,6 +930,8 @@ structure OptLambda: OPT_LAMBDA =
               | "__minus_f256" => true
               | "__mul_f256" => true
               | "__div_f256" => true
+              | "__and_f256" => true
+              | "__or_f256" => true
               | "__less_f256" => true
               | "__lesseq_f256" => true
               | "__greater_f256" => true
@@ -1594,6 +1606,9 @@ structure OptLambda: OPT_LAMBDA =
       fun reduce_f256all e =
           (tick "f256_unbox"; (f256_all (f256_unbox e), CUNKNOWN))
 
+      fun reduce_f256not e =
+          (tick "f256_unbox"; (f256_box (f256_not (f256_unbox e)), CUNKNOWN))
+
       fun reduce_f64cmp f64cmp (e1,e2) =
           (tick "real_to_f64";
            (f64cmp (real_to_f64 e1, real_to_f64 e2), CUNKNOWN))
@@ -1969,6 +1984,8 @@ structure OptLambda: OPT_LAMBDA =
                 		(f256_box (f256_blend (f256_unbox a, f256_unbox b, f256_unbox mask)), CUNKNOWN)
                 | ("__m256d_plus", [x, y]) => reduce_f256bin f256_plus (x, y)
                 | ("__m256d_minus", [x, y]) => reduce_f256bin f256_minus (x, y)
+                | ("__m256d_and", [x, y]) => reduce_f256bin f256_and (x, y)
+                | ("__m256d_or", [x, y]) => reduce_f256bin f256_or (x, y)
                 | ("__m256d_mul", [x, y]) => reduce_f256bin f256_mul (x, y)
                 | ("__m256d_div", [x, y]) => reduce_f256bin f256_div (x, y)
                 | ("__m256d_less", [x, y]) => reduce_f256bin f256_less (x, y)
@@ -1976,6 +1993,7 @@ structure OptLambda: OPT_LAMBDA =
                 | ("__m256d_greater", [x, y]) => reduce_f256bin f256_greater (x, y)
                 | ("__m256d_greatereq", [x, y]) => reduce_f256bin f256_greatereq (x, y)
                 | ("__m256d_all", [x]) => reduce_f256all x
+                | ("__m256d_not", [x]) => reduce_f256not x
                 | ("__m256d_any", [x]) => reduce_f256any x
                 | ("__m256d_sum", [a]) => (f64_to_real (f256_sum (f256_unbox a)), CUNKNOWN)
                 | ("__m256d_product", [a]) => (f64_to_real (f256_product (f256_unbox a)), CUNKNOWN)
